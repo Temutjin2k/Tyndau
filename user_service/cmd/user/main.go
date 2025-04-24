@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"log"
-
-	"github.com/Temutjin2k/Tyndau/user_svc/config"
-	"github.com/Temutjin2k/Tyndau/user_svc/internal/app"
+	"user_service/config"
+	"user_service/internal/app"
 )
 
 func main() {
 	ctx := context.Background()
+	// TODO: add telemetry here when the topic of logging will be covered
 
 	// Parse config
 	cfg, err := config.New()
