@@ -1,126 +1,65 @@
 package config
 
 import (
-	"os"
+	"fmt"
+	"time"
+
+	"github.com/caarlos0/env/v10"
+	"github.com/joho/godotenv"
 )
 
-type Config struct {
-	Environment string
-	Version     string
-	Port        string
-	Services    []Service
-	CorsURLs    string
-}
-
-type Service struct {
-	Name       string
-	GrpcAddr   string
-	ApiVersion string
-	Status     string
-	Routes     []RouteConfig
-}
-
-func NewConfig() Config {
-	return Config{
-		Environment: getEnv("ENVIRONMENT", "development"),
-		Version:     getEnv("VERSION", "v1"),
-		Port:        getEnv("PORT", "8080"),
-		Services: []Service{
-			{
-				Name:       "inventory service",
-				GrpcAddr:   getEnv("INVENTORY_GRPC_ADDR", "localhost:50051"),
-				ApiVersion: "v1",
-				Status:     "down",
-				Routes: []RouteConfig{
-					{
-						Method:      "GET",
-						Path:        "/inventory",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "ListProducts",
-						RequestType: "ListProductsRequest",
-						QueryParams: []string{"Page", "PageSize", "SortBy"},
-					},
-					{
-						Method:      "GET",
-						Path:        "/inventory/{id}",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "GetProductByID",
-						RequestType: "GetProductRequest",
-						PathParams:  []string{"Id"},
-					},
-					{
-						Method:      "POST",
-						Path:        "/inventory",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "CreateProduct",
-						RequestType: "CreateProductRequest",
-					},
-					{
-						Method:      "PUT",
-						Path:        "/inventory/{id}",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "UpdateProduct",
-						RequestType: "UpdateProductRequest",
-						PathParams:  []string{"id"},
-					},
-					{
-						Method:      "DELETE",
-						Path:        "/inventory/{id}",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "DeleteProduct",
-						RequestType: "DeleteProductRequest",
-						PathParams:  []string{"Id"},
-					},
-					{
-						Method:      "POST",
-						Path:        "/categories",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "CreateCategory",
-						RequestType: "CreateCategoryRequest",
-					},
-					{
-						Method:      "GET",
-						Path:        "/categories/{id}",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "GetCategoryByID",
-						RequestType: "GetCategoryRequest",
-						PathParams:  []string{"Id"},
-					},
-					{
-						Method:      "PUT",
-						Path:        "/categories/{id}",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "UpdateCategory",
-						RequestType: "UpdateCategoryRequest",
-						PathParams:  []string{"id"},
-					},
-					{
-						Method:      "DELETE",
-						Path:        "/categories/{id}",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "DeleteCategory",
-						RequestType: "DeleteCategoryRequest",
-						PathParams:  []string{"Id"},
-					},
-					{
-						Method:      "GET",
-						Path:        "/categories",
-						GRPCService: "InventoryService",
-						GRPCMethod:  "ListCategories",
-						RequestType: "ListCategoriesRequest",
-						QueryParams: []string{"Page", "PageSize", "SortBy"},
-					},
-				},
-			},
-			// Orders service configuration
-		},
-		CorsURLs: getEnv("CORS_URLS", "*"),
+type (
+	// Config holds the entire application configuration
+	Config struct {
+		Server  Server
+		Version string `env:"VERSION"`
 	}
-}
 
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
+	// Server holds the configuration for both HTTP and gRPC servers
+	Server struct {
+		HTTPServer      HTTPServer
+		UserGRPCServers UserGRPCServer
+		MusicGRPCServer MusicGRPCServer
 	}
-	return fallback
+
+	// HTTPServer holds the configuration for the HTTP server
+	HTTPServer struct {
+		Port           int           `env:"HTTP_PORT" envDefault:"8080"`
+		ReadTimeout    time.Duration `env:"HTTP_READ_TIMEOUT" envDefault:"30s"`
+		WriteTimeout   time.Duration `env:"HTTP_WRITE_TIMEOUT" envDefault:"30s"`
+		IdleTimeout    time.Duration `env:"HTTP_IDLE_TIMEOUT" envDefault:"60s"`
+		MaxHeaderBytes int           `env:"HTTP_MAX_HEADER_BYTES" envDefault:"1048576"` // 1 MB
+		TrustedProxies []string      `env:"HTTP_TRUSTED_PROXIES" envSeparator:","`
+	}
+
+	UserGRPCServer struct {
+		Addr         string        `env:"USER_GRPC_ADDRESS,notEmpty"` // Default port for gRPC server
+		ReadTimeout  time.Duration `env:"GRPC_READ_TIMEOUT" envDefault:"30s"`
+		WriteTimeout time.Duration `env:"GRPC_WRITE_TIMEOUT" envDefault:"30s"`
+	}
+
+	MusicGRPCServer struct {
+		Addr         string        `env:"MUSIC_GRPC_ADDRESS,notEmpty"` // Default port for gRPC server
+		ReadTimeout  time.Duration `env:"GRPC_READ_TIMEOUT" envDefault:"30s"`
+		WriteTimeout time.Duration `env:"GRPC_WRITE_TIMEOUT" envDefault:"30s"`
+	}
+)
+
+// New initializes and returns the configuration from environment variables and .env file
+func New() (*Config, error) {
+	var cfg Config
+
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		return nil, fmt.Errorf("error loading .env file: %w", err)
+	}
+
+	// Parse environment variables into the Config structure
+	err = env.Parse(&cfg)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing environment variables: %w", err)
+	}
+
+	return &cfg, nil
 }
