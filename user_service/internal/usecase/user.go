@@ -3,7 +3,8 @@ package usecase
 import (
 	"context"
 	"time"
-	"user_service/internal/model"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"

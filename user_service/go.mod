@@ -1,10 +1,15 @@
-module user_service
+module github.com/Temutjin2k/Tyndau/user_service
 
 go 1.24.1
 
 require (
 	golang.org/x/crypto v0.33.0
 	google.golang.org/grpc v1.72.0
+)
+
+require (
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 )
 
 require (
@@ -28,6 +33,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/joho/godotenv v1.5.1
 	github.com/rabbitmq/amqp091-go v1.10.0
+	github.com/rs/zerolog v1.34.0
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect

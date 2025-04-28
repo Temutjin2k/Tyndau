@@ -3,85 +3,108 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
-	"user_service/config"
-	"user_service/internal/adapter/grpc/genproto/userpb"
-	"user_service/internal/adapter/grpc/server/frontend"
 
+	"github.com/Temutjin2k/Tyndau/user_service/config"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/genproto/userpb"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/server/frontend"
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 type API struct {
-	s           *grpc.Server
-	cfg         config.GRPCServer
-	addr        string
+	s      *grpc.Server
+	cfg    config.GRPCServer
+	addr   string
+	logger *zerolog.Logger
+
 	userUsecase UserUseCase
 }
 
-func New(
-	cfg config.GRPCServer,
-	userUsecase UserUseCase,
-) *API {
+func New(cfg config.GRPCServer, logger *zerolog.Logger, userUsecase UserUseCase) *API {
+	addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
+
+	if logger != nil {
+		logger.Info().
+			Str("address", addr).
+			Msg("gRPC server instance created")
+	}
+
 	return &API{
-		cfg:         cfg,
-		addr:        fmt.Sprintf("0.0.0.0:%d", cfg.Port),
+		cfg:    cfg,
+		addr:   addr,
+		logger: logger,
+
 		userUsecase: userUsecase,
 	}
 }
 
 func (a *API) Run(ctx context.Context, errCh chan<- error) {
 	go func() {
-		log.Println(ctx, "gRPC server starting listen", fmt.Sprintf("addr: %s", a.addr))
+		a.logger.Info().
+			Str("address", a.addr).
+			Msg("gRPC server starting")
 
 		if err := a.run(ctx); err != nil {
+			a.logger.Error().
+				Err(err).
+				Msg("gRPC server failed to start")
 			errCh <- fmt.Errorf("can't start grpc server: %w", err)
-
-			return
 		}
 	}()
 }
 
-// Stop method gracefully stops grpc API server. Provide context to force stop on timeout.
 func (a *API) Stop(ctx context.Context) error {
 	if a.s == nil {
+		a.logger.Debug().Msg("gRPC server already stopped (nil server instance)")
 		return nil
 	}
 
 	stopped := make(chan struct{})
 	go func() {
+		a.logger.Info().Msg("gRPC server shutting down gracefully")
 		a.s.GracefulStop()
 		close(stopped)
 	}()
 
 	select {
-	case <-ctx.Done(): // Stop immediately if the context is terminated
+	case <-ctx.Done():
+		a.logger.Warn().Msg("gRPC server force stopped due to context cancellation")
 		a.s.Stop()
 	case <-stopped:
+		a.logger.Info().Msg("gRPC server stopped gracefully")
 	}
 
 	return nil
 }
 
-// run starts and runs GRPCServer server.
 func (a *API) run(ctx context.Context) error {
 	a.s = grpc.NewServer(a.setOptions(ctx)...)
 
-	// Register bo services
-
+	// Register services
 	userpb.RegisterUserServiceServer(a.s, frontend.NewUser(a.userUsecase))
-
-	// Register reflection service
 	reflection.Register(a.s)
+
+	a.logger.Debug().Msg("gRPC services registered")
 
 	listener, err := net.Listen("tcp", a.addr)
 	if err != nil {
+		a.logger.Error().
+			Err(err).
+			Str("address", a.addr).
+			Msg("failed to create listener")
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 
-	err = a.s.Serve(listener)
-	if err != nil {
+	a.logger.Info().
+		Str("address", a.addr).
+		Msg("gRPC server started listening")
+
+	if err := a.s.Serve(listener); err != nil {
+		a.logger.Error().
+			Err(err).
+			Msg("gRPC server failed to serve")
 		return fmt.Errorf("failed to serve grpc: %w", err)
 	}
 

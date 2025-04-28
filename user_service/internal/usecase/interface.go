@@ -2,7 +2,8 @@ package usecase
 
 import (
 	"context"
-	"user_service/internal/model"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 )
 
 type UserRepo interface {

@@ -3,8 +3,9 @@ package frontend
 import (
 	"context"
 	"errors"
-	"user_service/internal/adapter/grpc/genproto/userpb"
-	"user_service/internal/model"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/genproto/userpb"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 )
 
 type User struct {

@@ -2,8 +2,8 @@ package config
 
 import (
 	"time"
-	"user_service/pkg/postgres"
 
+	"github.com/Temutjin2k/Tyndau/user_service/pkg/postgres"
 	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
 )

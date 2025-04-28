@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"user_service/internal/adapter/postgres/dao"
-	"user_service/internal/model"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/postgres/dao"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"

@@ -2,7 +2,8 @@ package frontend
 
 import (
 	"context"
-	"user_service/internal/model"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 )
 
 type UserUseCase interface {

@@ -3,15 +3,17 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"user_service/config"
-	grpcserver "user_service/internal/adapter/grpc/server"
-	postgresrepo "user_service/internal/adapter/postgres"
-	"user_service/internal/usecase"
-	"user_service/pkg/postgres"
+
+	"github.com/Temutjin2k/Tyndau/user_service/config"
+	grpcserver "github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/server"
+	postgresrepo "github.com/Temutjin2k/Tyndau/user_service/internal/adapter/postgres"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/usecase"
+	"github.com/Temutjin2k/Tyndau/user_service/pkg/postgres"
+
+	"github.com/rs/zerolog"
 )
 
 const serviceName = "user-service"
@@ -19,28 +21,31 @@ const serviceName = "user-service"
 type App struct {
 	grpcServer *grpcserver.API
 	postgresDB *postgres.PostgreDB
+
+	logger *zerolog.Logger
 }
 
-func New(ctx context.Context, cfg *config.Config) (*App, error) {
-	log.Printf("starting %v service\n", serviceName)
+func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App, error) {
+	logger.Info().Str("service", serviceName).Msg("starting service")
 
-	log.Println("connecting to postgres")
+	logger.Info().Msg("connecting to Postgres")
 
 	postgresDB, err := postgres.New(ctx, cfg.Postgres)
 	if err != nil {
-		return nil, fmt.Errorf("mongo: %w", err)
+		logger.Error().Err(err).Msg("failed to connect to Postgres")
+		return nil, fmt.Errorf("postgres: %w", err)
 	}
-	log.Println("connection established")
+
+	logger.Info().Msg("Postgres connection established")
 
 	userRepo := postgresrepo.NewUserRepository(postgresDB.Pool)
-
 	userUseCase := usecase.NewUser(userRepo)
-
-	grpcServer := grpcserver.New(cfg.Server.GRPCServer, userUseCase)
+	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, userUseCase)
 
 	app := &App{
 		grpcServer: grpcServer,
 		postgresDB: postgresDB,
+		logger:     logger,
 	}
 
 	return app, nil
@@ -49,7 +54,7 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 func (a *App) Close(ctx context.Context) {
 	err := a.grpcServer.Stop(ctx)
 	if err != nil {
-		log.Println("failed to shutdown gRPC service", err)
+		a.logger.Error().Err(err).Msg("failed to stop http server")
 	}
 
 	// Closing postgres connection
@@ -62,7 +67,7 @@ func (a *App) Run() error {
 
 	a.grpcServer.Run(ctx, errCh)
 
-	log.Printf("service %v started\n", serviceName)
+	a.logger.Info().Str("name", serviceName).Msg("service started")
 
 	// Waiting signal
 	shutdownCh := make(chan os.Signal, 1)
@@ -73,10 +78,10 @@ func (a *App) Run() error {
 		return errRun
 
 	case s := <-shutdownCh:
-		log.Printf("received signal: %v. Running graceful shutdown...\n", s)
+		a.logger.Info().Str("received signal", s.String()).Msg("Shutting down application")
 
 		a.Close(ctx)
-		log.Println("graceful shutdown completed!")
+		a.logger.Info().Msg("Application stopped!")
 	}
 
 	return nil
