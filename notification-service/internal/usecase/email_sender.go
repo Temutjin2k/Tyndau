@@ -10,24 +10,23 @@ import (
 
 // EmailSenderUseCase реализует логику отправки email
 type EmailSenderUseCase struct {
-	emailSender    model.EmailSender
+	emailSender    model.EmailSender // Изменено с model.EmailSenderUseCase на model.EmailSender
 	templateEngine model.TemplateEngine
 	logger         *logger.Logger
 }
 
 // NewEmailSenderUseCase создает новый use case для отправки email
 func NewEmailSenderUseCase(
-	emailSender model.EmailSender,
-	templateEngine model.TemplateEngine,
-	logger *logger.Logger,
+    emailSender model.EmailSender,  // Изменено с model.EmailSenderUseCase на model.EmailSender
+    templateEngine model.TemplateEngine,
+    logger *logger.Logger,
 ) *EmailSenderUseCase {
-	return &EmailSenderUseCase{
-		emailSender:    emailSender,
-		templateEngine: templateEngine,
-		logger:         logger,
-	}
+    return &EmailSenderUseCase{
+        emailSender:    emailSender,
+        templateEngine: templateEngine,
+        logger:         logger,
+    }
 }
-
 // SendUserRegisteredEmail отправляет приветственное письмо
 func (uc *EmailSenderUseCase) SendUserRegisteredEmail(ctx context.Context, email string, name string) error {
 	// Данные для шаблона

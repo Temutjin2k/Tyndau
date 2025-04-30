@@ -11,13 +11,13 @@ import (
 
 // EventProcessorUseCase обрабатывает события
 type EventProcessorUseCase struct {
-    emailSender *EmailSenderUseCase
+    emailSender model.EmailSenderUseCase // Изменено на интерфейс
     logger      *logger.Logger
 }
 
 // NewEventProcessorUseCase создает новый use case для обработки событий
 func NewEventProcessorUseCase(
-    emailSender *EmailSenderUseCase,
+    emailSender model.EmailSenderUseCase, // Изменено на интерфейс
     logger *logger.Logger,
 ) *EventProcessorUseCase {
     return &EventProcessorUseCase{
