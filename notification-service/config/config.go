@@ -32,7 +32,7 @@ func LoadConfig() (*Config, error) {
 	config.NatsStream = getEnvString("NATS_STREAM", "tyndau")
 
 	// SMTP configuration
-	config.SMTPHost = getEnvString("SMTP_HOST", "smtp.gmail.com")
+	config.SMTPHost = getEnvString("SMTP_HOST", "smtp.mail.me.com")
 	smtpPort, err := getEnvInt("SMTP_PORT", 587)
 	if err != nil {
 		return nil, err
