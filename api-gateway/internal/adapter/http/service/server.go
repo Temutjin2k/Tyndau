@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Temutjin2k/Tyndau/api-gateway/config"
+	authProto "github.com/Temutjin2k/TyndauProto/gen/go/auth"
 	userProto "github.com/Temutjin2k/TyndauProto/gen/go/user"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/zerolog"
@@ -64,15 +65,15 @@ func (a *API) setupRoutes(ctx context.Context, mux *runtime.ServeMux) error {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	userCtx, userCancel := context.WithTimeout(ctx, a.cfg.Server.UserGRPCServers.ReadTimeout)
+	timeOutCtx, userCancel := context.WithTimeout(ctx, a.cfg.Server.UserGRPCServers.ReadTimeout)
 	defer userCancel()
 
-	if err := userProto.RegisterAuthHandlerFromEndpoint(userCtx, mux, a.cfg.Server.UserGRPCServers.Addr, opts); err != nil {
+	if err := authProto.RegisterAuthHandlerFromEndpoint(timeOutCtx, mux, a.cfg.Server.UserGRPCServers.Addr, opts); err != nil {
 		a.logger.Error().Err(err).Msg("Failed to register Auth handler")
 		return err
 	}
 
-	if err := userProto.RegisterUserHandlerFromEndpoint(userCtx, mux, a.cfg.Server.UserGRPCServers.Addr, opts); err != nil {
+	if err := userProto.RegisterUserHandlerFromEndpoint(timeOutCtx, mux, a.cfg.Server.UserGRPCServers.Addr, opts); err != nil {
 		a.logger.Error().Err(err).Msg("Failed to register User handler")
 		return err
 	}
