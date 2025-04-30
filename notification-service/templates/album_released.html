@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Новый альбом</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9fc;
+            padding: 30px;
+        }
+        .container {
+            background-color: white;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #8e44ad;
+        }
+        p {
+            font-size: 16px;
+            color: #444;
+        }
+        .album-box {
+            background-color: #f2ecfa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #aaa;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🎧 Новый альбом вышел!</h2>
+    <div class="album-box">
+        <p><strong>Название:</strong> {{.AlbumName}}</p>
+        <p><strong>Исполнитель:</strong> {{.ArtistName}}</p>
+    </div>
+    <p>Наслаждайся новой музыкой от Tyndau!</p>
+    <div class="footer">© 2025 Tyndau</div>
+</div>
+</body>
+</html>

@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notification_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   nats:
     image: nats:latest
     ports:
@@ -16,16 +32,25 @@ services:
   notification-service:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: notification-service/Dockerfile
     depends_on:
+      postgres:
+        condition: service_healthy
       nats:
         condition: service_healthy
     environment:
       - NATS_URL=nats://nats:4222
       - NATS_STREAM=tyndau
-      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
-      - SMTP_PORT=${SMTP_PORT:-587}
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_FROM=${SMTP_FROM:-noreply@tyndau.com}
+      # Add these new environment variables for consumer configuration
+      - NATS_CONSUMER_PREFIX=tyndau_consumer
+      - NATS_SUBJECT_USER_REGISTERED=user_registered
+      # SMTP configuration
+      - SMTP_HOST=smtp.mail.me.com
+      - SMTP_PORT=587
+      - SMTP_USERNAME=pinokiochan_n@icloud.com
+      - SMTP_PASSWORD=vzua-vlkb-xrql-hgzq
+      - SMTP_FROM=pinokiochan_n@icloud.com
       - TEMPLATES_DIR=/app/templates
+
+volumes:
+  postgres_data:

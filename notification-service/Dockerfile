@@ -1,30 +1,32 @@
-FROM golang:1.21-alpine AS builder
+# Stage 1: builder
+FROM golang:1.23.4-alpine AS builder
 
 WORKDIR /app
 
 # Copy go.mod and go.sum
-COPY go.mod go.sum ./
+COPY notification-service/go.mod notification-service/go.sum ./
 RUN go mod download
 
-# Copy source code
-COPY . .
+# Copy the entire notification-service folder
+COPY notification-service/ ./
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o notification-service ./cmd/notification
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o /notification-service ./cmd/notification
 
-# Create final image
+
+# Stage 2: minimal image
 FROM alpine:latest
-
 WORKDIR /app
 
-# Copy the binary from the builder stage
-COPY --from=builder /app/notification-service .
+RUN mkdir -p /app/templates
 
-# Copy templates
-COPY --from=builder /app/templates ./templates
+# Copy the binary from builder to the correct location
+COPY --from=builder /notification-service /app/notification-service
 
-# Expose ports if needed
-# EXPOSE 8080
+# Optional: only if you have templates
+COPY notification-service/templates/ /app/templates/
 
-# Run the application
-CMD ["./notification-service"]
+# Give execute permissions to the binary
+RUN chmod +x /app/notification-service
+
+CMD ["/app/notification-service"]
