@@ -13,7 +13,7 @@ const (
 
 // Event представляет событие из NATS
 type Event struct {
-    Type      EventType   `json:"event"`
+    Type      EventType   `json:"event_type"`
     UserID    string      `json:"user_id"`
     Email     string      `json:"email"`
     Data      interface{} `json:"data,omitempty"`
