@@ -8,7 +8,9 @@ import (
 
 	"github.com/Temutjin2k/Tyndau/auth_service/config"
 	grpcserver "github.com/Temutjin2k/Tyndau/auth_service/internal/adapter/grpc/server"
+	"github.com/Temutjin2k/Tyndau/auth_service/internal/adapter/nats"
 	"github.com/Temutjin2k/Tyndau/auth_service/internal/usecase"
+	"github.com/Temutjin2k/Tyndau/auth_service/pkg/grpcconn"
 
 	"github.com/rs/zerolog"
 )
@@ -24,13 +26,27 @@ type App struct {
 func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App, error) {
 	logger.Info().Str("service", serviceName).Msg("starting service")
 
+	userConn, err := grpcconn.New(cfg.GRPCServices.UserGRPCService.Addr)
+	if err != nil {
+		logger.Error().Err(err).Str("service to connect", "user_service").Msg("failed to create grpc connention")
+		return nil, err
+	}
+
 	// User microservice
-	userProvider := usecase.NewUserProvider(nil)
+	userProvider := usecase.NewUserProvider(userConn)
+
+	// Nats producer
+	producer, err := nats.NewProducer(cfg.NatsProducerConfig)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to connect Nats")
+		return nil, err
+	}
 
 	// Mail Provider
-	mailProvider := usecase.NewMail(nil)
+	mailProvider := usecase.NewMail(producer)
 
 	authUseCase := usecase.NewAuth(userProvider, mailProvider, logger)
+
 	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, authUseCase)
 
 	app := &App{

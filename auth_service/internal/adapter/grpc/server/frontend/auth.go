@@ -3,6 +3,7 @@ package frontend
 import (
 	"context"
 
+	"github.com/Temutjin2k/Tyndau/auth_service/internal/adapter/grpc/server/frontend/dto"
 	"github.com/Temutjin2k/Tyndau/auth_service/internal/model"
 	authpb "github.com/Temutjin2k/TyndauProto/gen/go/auth"
 	"google.golang.org/grpc/codes"
@@ -21,12 +22,7 @@ func NewAuthServer(uc AuthUseCase) *AuthServer {
 }
 
 func (h *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	user := model.User{
-		Name:       req.GetName(),
-		Email:      req.GetEmail(),
-		Password:   req.GetPassword(),
-		AvatarLink: req.GetAvatarLink(),
-	}
+	user := dto.FromRegisterRequest(req)
 
 	newUser, err := h.uc.Register(ctx, user)
 	if err != nil {
