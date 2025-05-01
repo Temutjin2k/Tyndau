@@ -8,15 +8,15 @@ Notification Service is a specialized microservice designed to handle user commu
 ## Architecture
 This diagram shows the architecture of the Notification Service.
 
-![Notification Service Architecture](./notification-service/xdiagrams/diagram.svg)
+![Notification Service Architecture](./xdiagrams/diagram.svg)
 
 The diagrams demonstrates how different services interact with each other and with external systems.
 
-![Notification Service Architecture](./notification-service/xdiagrams/diagram1.svg)
+![Notification Service Architecture](./xdiagrams/diagram1.svg)
 
-![Notification Service Architecture](./notification-service/xdiagrams/diagram2.svg)
+![Notification Service Architecture](./xdiagrams/diagram2.svg)
 
-![Notification Service Architecture](./notification-service/xdiagrams/diagram3.svg)
+![Notification Service Architecture](./xdiagrams/diagram3.svg)
 
 ### Key Features
 
