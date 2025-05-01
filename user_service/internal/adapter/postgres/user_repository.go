@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"user_service/internal/adapter/postgres/dao"
-	"user_service/internal/model"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/postgres/dao"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 
 	"github.com/jackc/pgx"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,11 +21,6 @@ type UserRepo struct {
 func NewUserRepository(db *pgxpool.Pool) *UserRepo {
 	return &UserRepo{db: db}
 }
-
-// Create(ctx context.Context, User model.User) (model.User, error)
-// 	Update(ctx context.Context, update model.User) error
-// 	GetProfile(ctx context.Context, email string) (model.User, error)
-// 	GetByID(ctx context.Context, id int64) (model.User, error)
 
 func (r *UserRepo) Create(ctx context.Context, user model.User) (model.User, error) {
 	daoUser := dao.FromUser(user)
@@ -49,25 +45,27 @@ func (r *UserRepo) Create(ctx context.Context, user model.User) (model.User, err
 	return dao.ToUser(daoUser), nil
 }
 
-func (r *UserRepo) Update(ctx context.Context, update model.User) error {
+func (r *UserRepo) Update(ctx context.Context, update *model.User) error {
 	query := `
 		UPDATE users
 		SET name = $1, email = $2, avatar_link = $3, version = version + 1
-		WHERE id = $4 AND is_deleted = false
+		WHERE id = $4 AND version = $5 AND is_deleted = false
+		RETURNING version
 	`
 
-	cmdTag, err := r.db.Exec(ctx, query,
+	args := []any{
 		update.Name,
 		update.Email,
 		update.AvatarLink,
 		update.ID,
-	)
+		update.Version,
+	}
+
+	err := r.db.QueryRow(ctx, query, args...).Scan(&update.Version)
 	if err != nil {
 		return err
 	}
-	if cmdTag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
+
 	return nil
 }
 
@@ -91,7 +89,7 @@ func (r *UserRepo) GetProfile(ctx context.Context, email string) (model.User, er
 	if err != nil {
 		switch {
 		case err == pgx.ErrNoRows:
-			return model.User{}, model.ErrDuplicateEmail
+			return model.User{}, ErrNotFound
 		default:
 			return model.User{}, err
 		}
@@ -123,4 +121,22 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (model.User, error) {
 	}
 
 	return dao.ToUser(daoUser), nil
+}
+
+func (r *UserRepo) Delete(ctx context.Context, id int64) error {
+	query := `
+		UPDATE users 
+		SET is_deleted = TRUE 
+		WHERE id = $1`
+
+	cmdTag, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

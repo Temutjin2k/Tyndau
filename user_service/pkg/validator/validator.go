@@ -3,6 +3,7 @@ package validator
 import (
 	"regexp"
 	"slices"
+	"strings"
 )
 
 // Declare a regular expression for sanity checking the format of email addresses (we'll
@@ -61,4 +62,27 @@ func Unique[T comparable](values []T) bool {
 		uniqueValues[value] = true
 	}
 	return len(values) == len(uniqueValues)
+}
+
+// Error implements the error interface
+func (v *Validator) Error() string {
+	if v.Valid() {
+		return ""
+	}
+
+	var sb strings.Builder
+	sb.WriteString("validation failed: ")
+
+	i := 0
+	for field, err := range v.Errors {
+		if i > 0 {
+			sb.WriteString("; ")
+		}
+		sb.WriteString(field)
+		sb.WriteString(": ")
+		sb.WriteString(err)
+		i++
+	}
+
+	return sb.String()
 }

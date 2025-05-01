@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant UserSvc as User Service
+    participant MusicSvc as Music Service
+    participant NATS
+    participant NATSAdapter as NATS Adapter
+    participant UseCase as Notification Use Case
+    participant EmailAdapter as Email Adapter
+    participant DBAdapter as PostgreSQL Adapter
+    participant DB as PostgreSQL
+    participant SMTP
+    
+    %% User Registration Flow
+    UserSvc->>NATS: Publish user.registered event
+    NATS->>NATSAdapter: Deliver event
+    NATSAdapter->>UseCase: Handle user.registered event
+    UseCase->>DBAdapter: Save notification
+    DBAdapter->>DB: Insert notification record
+    UseCase->>EmailAdapter: Send welcome email
+    EmailAdapter->>SMTP: Send email
+    
+    %% New Album Release Flow
+    MusicSvc->>NATS: Publish music.album.released event
+    NATS->>NATSAdapter: Deliver event
+    NATSAdapter->>UseCase: Handle music.album.released event
+    UseCase->>DBAdapter: Save notifications (for each subscriber)
+    DBAdapter->>DB: Insert notification records
+    UseCase->>EmailAdapter: Send new album emails
+    EmailAdapter->>SMTP: Send emails
+    
+    %% Direct API Call Flow
+    Note over gRPC,UseCase: Direct API Call Flow
+    gRPC->>UseCase: GetNotifications request
+    UseCase->>DBAdapter: Find notifications by user ID
+    DBAdapter->>DB: Query notifications
+    DB->>DBAdapter: Return notification records
+    DBAdapter->>UseCase: Return notification objects
+    UseCase->>gRPC: Return notifications response

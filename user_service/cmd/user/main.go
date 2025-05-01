@@ -2,34 +2,34 @@ package main
 
 import (
 	"context"
-	"log"
-	"user_service/config"
-	"user_service/internal/app"
+	"os"
+
+	"github.com/Temutjin2k/Tyndau/user_service/config"
+	"github.com/Temutjin2k/Tyndau/user_service/internal/app"
+	"github.com/Temutjin2k/Tyndau/user_service/pkg/zerologger"
 )
 
 func main() {
 	ctx := context.Background()
-	// TODO: add telemetry here when the topic of logging will be covered
+
+	logger := zerologger.NewZeroLogger()
 
 	// Parse config
 	cfg, err := config.New()
 	if err != nil {
-		log.Printf("failed to parse config: %v", err)
-
-		return
+		logger.Error().Err(err).Msg("failed to parse config")
+		os.Exit(1)
 	}
 
-	application, err := app.New(ctx, cfg)
+	application, err := app.New(ctx, cfg, logger)
 	if err != nil {
-		log.Println("failed to setup application:", err)
-
-		return
+		logger.Error().Err(err).Msg("failed to setup application")
+		os.Exit(1)
 	}
 
 	err = application.Run()
 	if err != nil {
-		log.Println("failed to run application: ", err)
-
-		return
+		logger.Error().Err(err).Msg("failed to run application")
+		os.Exit(1)
 	}
 }

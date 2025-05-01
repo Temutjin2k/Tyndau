@@ -1,0 +1,69 @@
+graph TD
+    %% External Systems
+    User["User"]
+    UserService["User Service"]
+    MusicService["Music Service"]
+    NATS["NATS Message Queue"]
+    SMTP["SMTP Server"]
+    PostgreSQL["PostgreSQL Database"]
+    
+    %% Clean Architecture Layers
+    subgraph "Notification Service"
+        %% Adapters Layer
+        subgraph "Adapters Layer"
+            GRPCServer["gRPC Server"]
+            NATSAdapter["NATS Adapter"]
+            PostgresAdapter["PostgreSQL Adapter"]
+            EmailAdapter["SMTP Adapter"]
+        end
+        
+        %% Use Case Layer
+        subgraph "Use Case Layer"
+            NotificationUseCase["Notification Use Case"]
+        end
+        
+        %% Domain Layer
+        subgraph "Domain Layer"
+            Models["Domain Models"]
+            Interfaces["Domain Interfaces"]
+        end
+        
+        %% Optional Cache
+        Cache["Memory Cache (Optional)"]
+    end
+    
+    %% External Connections
+    User -->|"Request via gRPC"| GRPCServer
+    UserService -->|"Publishes user.registered event"| NATS
+    MusicService -->|"Publishes music.album.released event"| NATS
+    NATS -->|"Delivers events"| NATSAdapter
+    PostgresAdapter -->|"Stores/Retrieves data"| PostgreSQL
+    EmailAdapter -->|"Sends emails"| SMTP
+    
+    %% Internal Connections
+    GRPCServer -->|"Calls"| NotificationUseCase
+    NATSAdapter -->|"Calls"| NotificationUseCase
+    NotificationUseCase -->|"Uses"| PostgresAdapter
+    NotificationUseCase -->|"Uses"| EmailAdapter
+    NotificationUseCase -->|"Uses"| Models
+    NotificationUseCase -->|"Implements"| Interfaces
+    PostgresAdapter -->|"Implements"| Interfaces
+    NATSAdapter -->|"Implements"| Interfaces
+    EmailAdapter -->|"Implements"| Interfaces
+    
+    %% Optional Cache Connection
+    PostgresAdapter -.->|"Uses (optional)"| Cache
+    Cache -.->|"Caches"| Models
+    
+    %% Styling
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px
+    classDef adapter fill:#bbf,stroke:#333,stroke-width:1px
+    classDef usecase fill:#bfb,stroke:#333,stroke-width:1px
+    classDef domain fill:#fbb,stroke:#333,stroke-width:1px
+    classDef optional fill:#ddd,stroke:#333,stroke-width:1px,stroke-dasharray: 5 5
+    
+    class User,UserService,MusicService,NATS,SMTP,PostgreSQL external
+    class GRPCServer,NATSAdapter,PostgresAdapter,EmailAdapter adapter
+    class NotificationUseCase usecase
+    class Models,Interfaces domain
+    class Cache optional

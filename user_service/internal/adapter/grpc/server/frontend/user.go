@@ -2,72 +2,71 @@ package frontend
 
 import (
 	"context"
-	"errors"
-	"user_service/internal/adapter/grpc/genproto/userpb"
-	"user_service/internal/model"
+	"fmt"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/server/frontend/dto"
+	userpb "github.com/Temutjin2k/TyndauProto/gen/go/user"
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type User struct {
-	userpb.UnimplementedUserServiceServer
-
+// gRPC server for user service
+type UserGRPCHandler struct {
+	userpb.UnimplementedUserServer
 	uc UserUseCase
+
+	log *zerolog.Logger
 }
 
-func NewUser(uc UserUseCase) *User {
-	return &User{uc: uc}
+func NewUser(uc UserUseCase, log *zerolog.Logger) *UserGRPCHandler {
+	return &UserGRPCHandler{uc: uc, log: log}
 }
 
-func (h *User) RegisterUser(ctx context.Context, req *userpb.UserRequest) (*userpb.UserResponse, error) {
-	user := model.User{
-		Name:       req.GetName(),
-		Email:      req.GetEmail(),
-		Password:   req.GetPassword(),
-		AvatarLink: req.GetAvatarLink(),
-	}
+func (u *UserGRPCHandler) Create(ctx context.Context, req *userpb.CreateRequest) (*userpb.CreateResonse, error) {
+	user := dto.FromCreateRequest(req)
 
-	createdUser, err := h.uc.Register(ctx, user)
+	createdUser, err := u.uc.Create(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &userpb.UserResponse{
-		UserId:  createdUser.ID,
-		Message: "User registered successfully",
+	return &userpb.CreateResonse{
+		UserId: createdUser.ID,
 	}, nil
 }
 
-func (h *User) AuthenticateUser(ctx context.Context, req *userpb.AuthRequest) (*userpb.AuthResponse, error) {
-	user := model.User{
-		Email:    req.GetEmail(),
-		Password: req.GetPassword(),
+func (u *UserGRPCHandler) Profile(ctx context.Context, req *userpb.ProfileRequest) (*userpb.ProfileResponse, error) {
+	if req.UserId < 1 {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("wrong ID: %d", req.UserId))
 	}
 
-	token, err := h.uc.Authenticate(ctx, user)
+	user, err := u.uc.GetProfile(ctx, req.GetUserId())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
 	}
 
-	return &userpb.AuthResponse{
-		Token: token.Token,
-	}, nil
+	return dto.ToProfileResponce(user), nil
 }
 
-func (h *User) GetUserProfile(ctx context.Context, req *userpb.UserID) (*userpb.UserProfile, error) {
-	id := req.GetUserId()
-	if id == 0 {
-		return nil, errors.New("invalid user ID")
-	}
+func (u *UserGRPCHandler) Update(ctx context.Context, req *userpb.UpdateRequest) (*userpb.UpdateResponse, error) {
+	user := dto.FromUpdateRequest(req)
 
-	user, err := h.uc.GetProfile(ctx, id)
+	updatedUser, err := u.uc.Update(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Aborted, err.Error())
 	}
 
-	return &userpb.UserProfile{
-		UserId:     user.ID,
-		Name:       user.Name,
-		Email:      user.Email,
-		AvatarLink: user.AvatarLink,
-		Version:    user.Version,
+	return dto.ToUpdateResponce(updatedUser), nil
+}
+
+func (u *UserGRPCHandler) Delete(ctx context.Context, req *userpb.DeleteUserRequest) (*userpb.DeleteUserResponse, error) {
+	err := u.uc.Delete(ctx, req.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &userpb.DeleteUserResponse{
+		Success: true,
 	}, nil
 }
