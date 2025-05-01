@@ -23,7 +23,7 @@ type API struct {
 }
 
 func New(cfg config.GRPCServer, logger *zerolog.Logger, userUsecase UserUseCase) *API {
-	addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
+	addr := fmt.Sprintf("127.0.0.1:%d", cfg.Port)
 
 	if logger != nil {
 		logger.Info().

@@ -8,12 +8,9 @@ import (
 	"time"
 
 	"github.com/Temutjin2k/Tyndau/api-gateway/config"
-	authProto "github.com/Temutjin2k/TyndauProto/gen/go/auth"
-	userProto "github.com/Temutjin2k/TyndauProto/gen/go/user"
+
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/zerolog"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const serverIPAddress = "127.0.0.1:%d" // Changed to 0.0.0.0 for external access
@@ -61,20 +58,9 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 }
 
 func (a *API) setupRoutes(ctx context.Context, mux *runtime.ServeMux) error {
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-
-	timeOutCtx, userCancel := context.WithTimeout(ctx, a.cfg.Server.UserGRPCServers.ReadTimeout)
-	defer userCancel()
-
-	if err := authProto.RegisterAuthHandlerFromEndpoint(timeOutCtx, mux, a.cfg.Server.UserGRPCServers.Addr, opts); err != nil {
-		a.logger.Error().Err(err).Msg("Failed to register Auth handler")
-		return err
-	}
-
-	if err := userProto.RegisterUserHandlerFromEndpoint(timeOutCtx, mux, a.cfg.Server.UserGRPCServers.Addr, opts); err != nil {
-		a.logger.Error().Err(err).Msg("Failed to register User handler")
+	err := a.RegisterUsergRPCHandler(ctx, mux, a.cfg.Server.UserGRPCServers.Addr)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to register user gRPC server")
 		return err
 	}
 
