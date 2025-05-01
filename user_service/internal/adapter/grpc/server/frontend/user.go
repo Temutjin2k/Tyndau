@@ -2,31 +2,71 @@ package frontend
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/server/frontend/dto"
 	userpb "github.com/Temutjin2k/TyndauProto/gen/go/user"
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
+// gRPC server for user service
 type UserGRPCHandler struct {
 	userpb.UnimplementedUserServer
 	uc UserUseCase
+
+	log *zerolog.Logger
 }
 
-func NewUser(uc UserUseCase) *UserGRPCHandler {
-	return &UserGRPCHandler{uc: uc}
+func NewUser(uc UserUseCase, log *zerolog.Logger) *UserGRPCHandler {
+	return &UserGRPCHandler{uc: uc, log: log}
 }
 
-func (u *UserGRPCHandler) Create(context.Context, *userpb.CreateRequest) (*userpb.CreateResonse, error) {
-	panic("Implement me")
-}
+func (u *UserGRPCHandler) Create(ctx context.Context, req *userpb.CreateRequest) (*userpb.CreateResonse, error) {
+	user := dto.FromCreateRequest(req)
 
-func (u *UserGRPCHandler) Delete(ctx context.Context, req *userpb.DeleteUserRequest) (*userpb.DeleteUserResponse, error) {
-	panic("implement me")
+	createdUser, err := u.uc.Create(ctx, user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &userpb.CreateResonse{
+		UserId: createdUser.ID,
+	}, nil
 }
 
 func (u *UserGRPCHandler) Profile(ctx context.Context, req *userpb.ProfileRequest) (*userpb.ProfileResponse, error) {
-	panic("implement me")
+	if req.UserId < 1 {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("wrong ID: %d", req.UserId))
+	}
+
+	user, err := u.uc.GetProfile(ctx, req.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
+	}
+
+	return dto.ToProfileResponce(user), nil
 }
 
-func (u *UserGRPCHandler) Update(context.Context, *userpb.UpdateRequest) (*userpb.UpdateResponse, error) {
-	panic("Implement me")
+func (u *UserGRPCHandler) Update(ctx context.Context, req *userpb.UpdateRequest) (*userpb.UpdateResponse, error) {
+	user := dto.FromUpdateRequest(req)
+
+	updatedUser, err := u.uc.Update(ctx, user)
+	if err != nil {
+		return nil, status.Error(codes.Aborted, err.Error())
+	}
+
+	return dto.ToUpdateResponce(updatedUser), nil
+}
+
+func (u *UserGRPCHandler) Delete(ctx context.Context, req *userpb.DeleteUserRequest) (*userpb.DeleteUserResponse, error) {
+	err := u.uc.Delete(ctx, req.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &userpb.DeleteUserResponse{
+		Success: true,
+	}, nil
 }

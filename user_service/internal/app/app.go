@@ -39,7 +39,7 @@ func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App,
 	logger.Info().Msg("Postgres connection established")
 
 	userRepo := postgresrepo.NewUserRepository(postgresDB.Pool)
-	userUseCase := usecase.NewUser(userRepo)
+	userUseCase := usecase.NewUser(userRepo, logger)
 	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, userUseCase)
 
 	app := &App{
@@ -67,7 +67,7 @@ func (a *App) Run() error {
 
 	a.grpcServer.Run(ctx, errCh)
 
-	a.logger.Info().Str("name", serviceName).Msg("service started")
+	a.logger.Info().Str("name", serviceName).Msg("service is running")
 
 	// Waiting signal
 	shutdownCh := make(chan os.Signal, 1)

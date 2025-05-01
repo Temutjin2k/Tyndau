@@ -45,25 +45,27 @@ func (r *UserRepo) Create(ctx context.Context, user model.User) (model.User, err
 	return dao.ToUser(daoUser), nil
 }
 
-func (r *UserRepo) Update(ctx context.Context, update model.User) error {
+func (r *UserRepo) Update(ctx context.Context, update *model.User) error {
 	query := `
 		UPDATE users
 		SET name = $1, email = $2, avatar_link = $3, version = version + 1
-		WHERE id = $4 AND is_deleted = false
+		WHERE id = $4 AND version = $5 AND is_deleted = false
+		RETURNING version
 	`
 
-	cmdTag, err := r.db.Exec(ctx, query,
+	args := []any{
 		update.Name,
 		update.Email,
 		update.AvatarLink,
 		update.ID,
-	)
+		update.Version,
+	}
+
+	err := r.db.QueryRow(ctx, query, args...).Scan(&update.Version)
 	if err != nil {
 		return err
 	}
-	if cmdTag.RowsAffected() == 0 {
-		return ErrNotFound
-	}
+
 	return nil
 }
 

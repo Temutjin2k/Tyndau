@@ -83,7 +83,7 @@ func (a *API) run(ctx context.Context) error {
 	a.s = grpc.NewServer(a.setOptions(ctx)...)
 
 	// Register services
-	userServer := frontend.NewUser(a.userUsecase)
+	userServer := frontend.NewUser(a.userUsecase, a.logger)
 
 	userpb.RegisterUserServer(a.s, userServer)
 	reflection.Register(a.s)
