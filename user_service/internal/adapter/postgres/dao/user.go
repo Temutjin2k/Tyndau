@@ -2,7 +2,8 @@ package dao
 
 import (
 	"time"
-	"user_service/internal/model"
+
+	"github.com/Temutjin2k/Tyndau/user_service/internal/model"
 )
 
 type User struct {
