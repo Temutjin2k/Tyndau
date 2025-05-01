@@ -22,11 +22,6 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-// Create(ctx context.Context, User model.User) (model.User, error)
-// 	Update(ctx context.Context, update model.User) error
-// 	GetProfile(ctx context.Context, email string) (model.User, error)
-// 	GetByID(ctx context.Context, id int64) (model.User, error)
-
 func (r *UserRepo) Create(ctx context.Context, user model.User) (model.User, error) {
 	daoUser := dao.FromUser(user)
 
@@ -92,7 +87,7 @@ func (r *UserRepo) GetProfile(ctx context.Context, email string) (model.User, er
 	if err != nil {
 		switch {
 		case err == pgx.ErrNoRows:
-			return model.User{}, model.ErrDuplicateEmail
+			return model.User{}, ErrNotFound
 		default:
 			return model.User{}, err
 		}
@@ -124,4 +119,22 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (model.User, error) {
 	}
 
 	return dao.ToUser(daoUser), nil
+}
+
+func (r *UserRepo) Delete(ctx context.Context, id int64) error {
+	query := `
+		UPDATE users 
+		SET is_deleted = TRUE 
+		WHERE id = $1`
+
+	cmdTag, err := r.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

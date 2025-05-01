@@ -6,8 +6,8 @@ import (
 	"net"
 
 	"github.com/Temutjin2k/Tyndau/user_service/config"
-	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/genproto/userpb"
 	"github.com/Temutjin2k/Tyndau/user_service/internal/adapter/grpc/server/frontend"
+	userpb "github.com/Temutjin2k/TyndauProto/gen/go/user"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -83,7 +83,9 @@ func (a *API) run(ctx context.Context) error {
 	a.s = grpc.NewServer(a.setOptions(ctx)...)
 
 	// Register services
-	userpb.RegisterUserServiceServer(a.s, frontend.NewUser(a.userUsecase))
+	userServer := frontend.NewUser(a.userUsecase)
+
+	userpb.RegisterUserServer(a.s, userServer)
 	reflection.Register(a.s)
 
 	a.logger.Debug().Msg("gRPC services registered")

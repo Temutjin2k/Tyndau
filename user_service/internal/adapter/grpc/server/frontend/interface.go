@@ -7,7 +7,8 @@ import (
 )
 
 type UserUseCase interface {
-	Register(ctx context.Context, user model.User) (model.User, error)
-	Authenticate(ctx context.Context, user model.User) (model.Token, error)
+	Create(ctx context.Context, user model.User) (model.User, error)
+	Update(ctx context.Context, user model.User) (model.User, error)
 	GetProfile(ctx context.Context, id int64) (model.User, error)
+	Delete(ctx context.Context, id int64)
 }
