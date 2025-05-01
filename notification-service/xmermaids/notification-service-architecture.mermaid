@@ -1,0 +1,6 @@
+graph TD;
+    A["User Service"] -->|"Publishes events"| B["NATS"]
+    C["Music Service"] -->|"Publishes events"| B
+    B -->|"Consumes events"| D["Notification Service"]
+    D -->|"Sends emails"| E["SMTP Server"]
+    D <-->|"Stores notification history"| F["Postgres DB"]
