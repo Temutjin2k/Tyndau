@@ -1,52 +1,234 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Новый альбом</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9fc;
-            padding: 30px;
+            font-family: 'Montserrat', Arial, sans-serif;
+            background-color: #f4f6f9;
+            padding: 40px 20px;
+            color: #333;
+            line-height: 1.6;
         }
-        .container {
-            background-color: white;
-            max-width: 600px;
-            margin: auto;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        
+        .email-wrapper {
+            max-width: 650px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #ffffff 0%, #f9f9ff 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(142, 68, 173, 0.1);
         }
-        h2 {
+        
+        .email-header {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .email-body {
+            padding: 40px 30px;
+        }
+        
+        .email-title {
+            font-size: 24px;
             color: #8e44ad;
+            margin-bottom: 25px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        p {
-            font-size: 16px;
+        
+        .album-container {
+            background: linear-gradient(135deg, #f2ecfa 0%, #e8e0f4 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid #8e44ad;
+        }
+        
+        .album-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .album-detail {
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #8e44ad;
+            width: 120px;
+            font-size: 15px;
+        }
+        
+        .detail-value {
+            font-size: 15px;
             color: #444;
         }
-        .album-box {
-            background-color: #f2ecfa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
+        
+        .message {
+            font-size: 16px;
+            color: #444;
+            margin: 25px 0;
+            line-height: 1.7;
         }
-        .footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #aaa;
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 15px 0;
             text-align: center;
+            transition: transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(142, 68, 173, 0.2);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(142, 68, 173, 0.3);
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+            margin: 30px 0;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .social-icon {
+            width: 36px;
+            height: 36px;
+            background-color: #8e44ad;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        
+        .email-footer {
+            background-color: #f9f9fc;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            border-top: 1px solid #eee;
+        }
+        
+        .footer-links {
+            margin: 10px 0;
+        }
+        
+        .footer-link {
+            color: #8e44ad;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-body {
+                padding: 30px 20px;
+            }
+            
+            .email-title {
+                font-size: 22px;
+            }
+            
+            .album-container {
+                padding: 20px;
+            }
+            
+            .detail-label {
+                width: 100px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <h2>🎧 Новый альбом вышел!</h2>
-    <div class="album-box">
-        <p><strong>Название:</strong> {{.AlbumName}}</p>
-        <p><strong>Исполнитель:</strong> {{.ArtistName}}</p>
+    <div class="email-wrapper">
+        <div class="email-header">
+            <div class="logo">TYNDAU</div>
+            <div class="header-subtitle">Музыка, которая вдохновляет</div>
+        </div>
+        
+        <div class="email-body">
+            <h2 class="email-title">🎧 Новый альбом вышел!</h2>
+            
+            <div class="album-container">
+                <div class="album-info">
+                    <div class="album-detail">
+                        <span class="detail-label">Название:</span>
+                        <span class="detail-value">{{.AlbumName}}</span>
+                    </div>
+                    <div class="album-detail">
+                        <span class="detail-label">Исполнитель:</span>
+                        <span class="detail-value">{{.ArtistName}}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="message">Наслаждайся новой музыкой от Tyndau! Мы уверены, что этот альбом станет отличным дополнением к твоей коллекции.</p>
+            
+            <a href="#" class="cta-button">Слушать сейчас</a>
+            
+            <div class="divider"></div>
+            
+            <div class="social-links">
+                <a href="https://t.me/dattebayee" class="social-icon">t</a>
+                <a href="https://www.instagram.com/wastewater_r/" class="social-icon">i</a>
+            </div>
+        </div>
+        
+        <div class="email-footer">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Отписаться</a>
+                <a href="#" class="footer-link">Настройки</a>
+                <a href="#" class="footer-link">Поддержка</a>
+            </div>
+            <div>© 2025 Tyndau. Все права защищены.</div>
+        </div>
     </div>
-    <p>Наслаждайся новой музыкой от Tyndau!</p>
-    <div class="footer">© 2025 Tyndau</div>
-</div>
 </body>
 </html>
