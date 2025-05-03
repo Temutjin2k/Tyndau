@@ -83,7 +83,7 @@ func (a *API) run(ctx context.Context) error {
 	a.server = grpc.NewServer(a.setOptions(ctx)...)
 
 	// Register services
-	authpb.RegisterAuthServer(a.server, frontend.NewAuthServer(a.authUseCase))
+	authpb.RegisterAuthServer(a.server, frontend.NewAuthServer(a.authUseCase, a.logger))
 	reflection.Register(a.server)
 
 	a.logger.Debug().Msg("gRPC services registered")

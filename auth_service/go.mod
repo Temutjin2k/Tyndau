@@ -3,7 +3,7 @@ module github.com/Temutjin2k/Tyndau/auth_service
 go 1.24.1
 
 require (
-	github.com/Temutjin2k/TyndauProto v0.0.5
+	github.com/Temutjin2k/TyndauProto v0.0.6
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/zerolog v1.34.0

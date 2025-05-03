@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect

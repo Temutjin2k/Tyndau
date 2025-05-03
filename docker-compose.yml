@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    env_file:
+      - ./api-gateway/.env
+    ports:
+      - "8080:8080" 
+    depends_on:
+      - auth_service
+      - user_service
+      - notification-service
+    networks:
+      - app-network
+
+  auth_service:
+    build:
+      context: ./auth_service
+      dockerfile: Dockerfile
+    env_file:
+      - ./auth_service/.env
+    networks:
+      - app-network
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./notification-service/.env
+    networks:
+      - app-network
+
+  user_service:
+    build:
+      context: ./user_service
+      dockerfile: Dockerfile
+    env_file:
+      - ./user_service/.env
+    networks:
+      - app-network
+      
+  # Nats    
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "--jetstream --http_port 8222"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge

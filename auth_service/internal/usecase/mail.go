@@ -1,11 +1,10 @@
 package usecase
 
-import "context"
-
-type welcomeMsg struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
-}
+import (
+	"context"
+	"errors"
+	"time"
+)
 
 type MailProvider struct {
 	producer Producer
@@ -19,11 +18,20 @@ func NewMail(producer Producer) *MailProvider {
 
 // SendWelcome sends mail and name to MessageQueue
 func (m *MailProvider) SendWelcome(ctx context.Context, email, name string) error {
-	req := welcomeMsg{
-		Email: email,
-		Name:  name,
+	if email == "" || name == "" {
+		return errors.New("email and name are required")
 	}
 
-	m.producer.PublishWithContext(ctx, req)
-	return nil
+	event := map[string]interface{}{
+		"event_type": "user.registered",
+		"user_id":    "", // can be filled later
+		"email":      email,
+		"timestamp":  time.Now().UTC().Format(time.RFC3339),
+		"data": map[string]any{
+			"name": name,
+		},
+	}
+
+	subject := "tyndau.user_registered"
+	return m.producer.SendEvent(ctx, subject, event)
 }

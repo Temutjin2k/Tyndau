@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 // Config содержит конфигурацию приложения
@@ -26,6 +28,11 @@ type Config struct {
 // LoadConfig загружает конфигурацию из переменных окружения
 func LoadConfig() (*Config, error) {
 	config := &Config{}
+
+	err := godotenv.Load()
+	if err != nil {
+		return config, err
+	}
 
 	// NATS configuration
 	config.NatsURL = getEnvString("NATS_URL", "nats://localhost:4222")

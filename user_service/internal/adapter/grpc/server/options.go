@@ -9,6 +9,8 @@ import (
 
 func (a *API) setOptions(ctx context.Context) []grpc.ServerOption {
 	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(UnaryLoggingInterceptor(a.logger)),
+
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionAge:      a.cfg.MaxConnectionAge,
 			MaxConnectionAgeGrace: a.cfg.MaxConnectionAgeGrace,

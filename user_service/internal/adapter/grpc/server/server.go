@@ -80,7 +80,9 @@ func (a *API) Stop(ctx context.Context) error {
 }
 
 func (a *API) run(ctx context.Context) error {
-	a.s = grpc.NewServer(a.setOptions(ctx)...)
+	a.s = grpc.NewServer(
+		a.setOptions(ctx)...,
+	)
 
 	// Register services
 	userServer := frontend.NewUser(a.userUsecase, a.logger)

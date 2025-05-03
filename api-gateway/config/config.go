@@ -40,7 +40,7 @@ type (
 	}
 
 	AuthGRPCServer struct {
-		Addr         string        `env:"MUSIC_GRPC_ADDRESS,notEmpty"` // Default port for gRPC server
+		Addr         string        `env:"AUTH_GRPC_ADDRESS,notEmpty"` // Default port for gRPC server
 		ReadTimeout  time.Duration `env:"GRPC_READ_TIMEOUT" envDefault:"30s"`
 		WriteTimeout time.Duration `env:"GRPC_WRITE_TIMEOUT" envDefault:"30s"`
 	}

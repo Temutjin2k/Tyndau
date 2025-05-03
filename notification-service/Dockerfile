@@ -1,32 +1,31 @@
-# Stage 1: builder
-FROM golang:1.23.4-alpine AS builder
+# Source https://habr.com/ru/companies/otus/articles/660301/
 
-WORKDIR /app
+FROM golang:alpine@sha256:7772cb5322baa875edd74705556d08f0eeca7b9c4b5367754ce3f2f00041ccee AS builder
 
-# Copy go.mod and go.sum
-COPY notification-service/go.mod notification-service/go.sum ./
+LABEL stage=gobuilder
+
+ENV CGO_ENABLED=0 \
+    GOOS=linux
+
+RUN apk update --no-cache && apk add --no-cache tzdata
+
+WORKDIR /build
+
+ADD go.mod .
+ADD go.sum .
 RUN go mod download
 
-# Copy the entire notification-service folder
-COPY notification-service/ ./
+COPY . .
 
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o /notification-service ./cmd/notification
+RUN mkdir -p /build/app && go build -ldflags="-s -w" -o /build/app/notification cmd/notification/main.go
 
+# Final image
+FROM alpine:latest@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
 
-# Stage 2: minimal image
-FROM alpine:latest
+RUN apk update --no-cache && apk add --no-cache ca-certificates
+
 WORKDIR /app
 
-RUN mkdir -p /app/templates
+COPY --from=builder /build/app/notification /app/notification
 
-# Copy the binary from builder to the correct location
-COPY --from=builder /notification-service /app/notification-service
-
-# Optional: only if you have templates
-COPY notification-service/templates/ /app/templates/
-
-# Give execute permissions to the binary
-RUN chmod +x /app/notification-service
-
-CMD ["/app/notification-service"]
+CMD ["/app/notification"]

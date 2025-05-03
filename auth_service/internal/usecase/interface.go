@@ -15,5 +15,5 @@ type MailService interface {
 }
 
 type Producer interface {
-	PublishWithContext(ctx context.Context, event any) error
+	SendEvent(ctx context.Context, subject string, event map[string]any) error
 }

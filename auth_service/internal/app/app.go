@@ -18,7 +18,8 @@ import (
 const serviceName = "user-service"
 
 type App struct {
-	grpcServer *grpcserver.API
+	grpcServer   *grpcserver.API
+	natsProducer *nats.Producer
 
 	logger *zerolog.Logger
 }
@@ -35,23 +36,25 @@ func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App,
 	// User microservice
 	userProvider := usecase.NewUserProvider(userConn)
 
-	// Nats producer
-	producer, err := nats.NewProducer(cfg.NatsProducerConfig)
+	// Nats natsProducer
+	natsProducer, err := nats.NewProducer(cfg.NatsProducerConfig)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to connect Nats")
 		return nil, err
 	}
 
 	// Mail Provider
-	mailProvider := usecase.NewMail(producer)
+	mailProvider := usecase.NewMail(natsProducer)
 
 	authUseCase := usecase.NewAuth(userProvider, mailProvider, logger)
 
 	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, authUseCase)
 
 	app := &App{
-		grpcServer: grpcServer,
-		logger:     logger,
+		grpcServer:   grpcServer,
+		natsProducer: natsProducer,
+
+		logger: logger,
 	}
 
 	return app, nil
@@ -62,6 +65,8 @@ func (a *App) Close(ctx context.Context) {
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to stop http server")
 	}
+
+	a.natsProducer.Close()
 
 }
 

@@ -27,71 +27,10 @@ func main() {
 			map[string]interface{}{
 				"event_type": "user.registered",
 				"user_id":    "user-001",
-				"email":      "beibarys7ergaliev@gmail.com",
+				"email":      "tamutdzhin2006@mail.ru",
 				"timestamp":  timestamp,
 				"data": map[string]interface{}{
 					"name": "Beibars",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "user.registered",
-				"user_id":    "user-002",
-				"email":      "bakhytzhanabdilmazhit@gmail.com",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"name": "Bakhytzhan",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "user.registered",
-				"user_id":    "user-003",
-				"email":      "mudrec6putei228@mail.ru",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"name": "Mudrec",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "user.registered",
-				"user_id":    "user-004",
-				"email":      "230311@astanait.edu.kz",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"name": "AITU Student",
-				},
-			},
-		},
-		{
-			"tyndau.album_released",
-			map[string]interface{}{
-				"event_type": "music.album_released",
-				"user_id":    "user-004",
-				"email":      "230311@astanait.edu.kz",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"album_name":  "Dreams of AITU",
-					"artist_name": "Synthfox",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "test.created",
-				"user_id":    "test-001",
-				"email":      "test@example.com",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"description": "This is a test event just for fun 🎉",
 				},
 			},
 		},

@@ -1,22 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: notification_service
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   nats:
     image: nats:latest
     ports:
@@ -24,18 +8,18 @@ services:
       - "8222:8222"
     command: "--jetstream --http_port 8222"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8222/healthz"]
+      test: ["CMD", "curl", "-f", "http://localhost:8222/varz"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - tyndau-network
 
   notification-service:
     build:
       context: .
-      dockerfile: notification-service/Dockerfile
+      dockerfile: Dockerfile
     depends_on:
-      postgres:
-        condition: service_healthy
       nats:
         condition: service_healthy
     environment:
@@ -45,12 +29,16 @@ services:
       - NATS_CONSUMER_PREFIX=tyndau_consumer
       - NATS_SUBJECT_USER_REGISTERED=user_registered
       # SMTP configuration
-      - SMTP_HOST=smtp.mail.me.com
+      - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
-      - SMTP_USERNAME=pinokiochan_n@icloud.com
-      - SMTP_PASSWORD=vzua-vlkb-xrql-hgzq
-      - SMTP_FROM=pinokiochan_n@icloud.com
+      - SMTP_USERNAME=tamutdzhin@gmail.com
+      - SMTP_PASSWORD=pktpusxmnalycizh 
+      - SMTP_FROM=tamutdzhin@gmail.com
       - TEMPLATES_DIR=/app/templates
+    networks:
+      - tyndau-network
 
-volumes:
-  postgres_data:
+networks:
+  tyndau-network:
+    driver: bridge
+

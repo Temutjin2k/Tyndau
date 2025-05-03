@@ -15,7 +15,7 @@ require (
 )
 
 require (
-	github.com/Temutjin2k/TyndauProto v0.0.5
+	github.com/Temutjin2k/TyndauProto v0.0.6
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect

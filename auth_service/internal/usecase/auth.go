@@ -43,6 +43,7 @@ func (u *AuthUseCase) Register(ctx context.Context, user model.User) (model.User
 	user.ID = userID
 
 	// Sends welcome message
+	u.logger.Debug().Str("email", user.Email).Str("user-name", user.Name).Msg("Sending email")
 	err = u.mailProvider.SendWelcome(ctx, user.Email, user.Name)
 	if err != nil {
 		u.logger.Error().Err(err).Str("email", user.Email).Str("user-name", user.Name).Msg("Failed to send welcome email")
