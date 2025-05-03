@@ -19,6 +19,7 @@ type (
 	Server struct {
 		HTTPServer      HTTPServer
 		UserGRPCServers UserGRPCServer
+		AuthGRPCServer  AuthGRPCServer
 		MusicGRPCServer MusicGRPCServer
 	}
 
@@ -34,6 +35,12 @@ type (
 
 	UserGRPCServer struct {
 		Addr         string        `env:"USER_GRPC_ADDRESS,notEmpty"` // Default port for gRPC server
+		ReadTimeout  time.Duration `env:"GRPC_READ_TIMEOUT" envDefault:"30s"`
+		WriteTimeout time.Duration `env:"GRPC_WRITE_TIMEOUT" envDefault:"30s"`
+	}
+
+	AuthGRPCServer struct {
+		Addr         string        `env:"MUSIC_GRPC_ADDRESS,notEmpty"` // Default port for gRPC server
 		ReadTimeout  time.Duration `env:"GRPC_READ_TIMEOUT" envDefault:"30s"`
 		WriteTimeout time.Duration `env:"GRPC_WRITE_TIMEOUT" envDefault:"30s"`
 	}

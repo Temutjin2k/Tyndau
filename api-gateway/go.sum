@@ -1,5 +1,7 @@
 github.com/Temutjin2k/TyndauProto v0.0.5 h1:9Hau2baEJUG3+vXJguMeYtdh1l7dClKXvresUS+26Ag=
 github.com/Temutjin2k/TyndauProto v0.0.5/go.mod h1:NEa0hOSh8NgViZI/Ip5jRn5576npiVckBC6V9AVeD4w=
+github.com/Temutjin2k/TyndauProto v0.0.6 h1:PEyit/I677nGAbbCxj951Ax33DpykVFCpXMjP4Po5f8=
+github.com/Temutjin2k/TyndauProto v0.0.6/go.mod h1:NEa0hOSh8NgViZI/Ip5jRn5576npiVckBC6V9AVeD4w=
 github.com/caarlos0/env/v10 v10.0.0 h1:yIHUBZGsyqCnpTkbjk8asUlx6RFhhEs+h7TOBdgdzXA=
 github.com/caarlos0/env/v10 v10.0.0/go.mod h1:ZfulV76NvVPw3tm591U4SwL3Xx9ldzBP9aGxzeN7G18=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=

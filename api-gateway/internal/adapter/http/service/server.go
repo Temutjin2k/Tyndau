@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/Temutjin2k/Tyndau/api-gateway/config"
-
+	authProto "github.com/Temutjin2k/TyndauProto/gen/go/auth"
+	userProto "github.com/Temutjin2k/TyndauProto/gen/go/user"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/zerolog"
 )
@@ -31,23 +32,23 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 		logger: logger,
 	}
 
-	err := api.setupRoutes(ctx, grpcMux)
+	err := api.setupGRPCRoutes(ctx, grpcMux)
 	if err != nil {
 		return nil, err
 	}
 
 	// Default ServeMux
-	mainMux := http.NewServeMux()
+	mux := http.NewServeMux()
 
-	// Healthcheck endpoint
-	mainMux.HandleFunc("/healthcheck", api.HealthCheck)
+	// Healthcheck
+	mux.HandleFunc("/healthcheck", api.HealthCheck)
 
 	// gRPC-Gateway mux
-	mainMux.Handle("/", grpcMux)
+	mux.Handle("/", grpcMux)
 
 	api.server = &http.Server{
 		Addr:           api.addr,
-		Handler:        mainMux,
+		Handler:        mux,
 		ReadTimeout:    cfg.Server.HTTPServer.ReadTimeout,
 		WriteTimeout:   cfg.Server.HTTPServer.WriteTimeout,
 		IdleTimeout:    cfg.Server.HTTPServer.IdleTimeout,
@@ -57,10 +58,17 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 	return api, nil
 }
 
-func (a *API) setupRoutes(ctx context.Context, mux *runtime.ServeMux) error {
-	err := a.RegisterUsergRPCHandler(ctx, mux, a.cfg.Server.UserGRPCServers.Addr)
+// Setup all routes
+func (a *API) setupGRPCRoutes(ctx context.Context, mux *runtime.ServeMux) error {
+	err := a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.UserGRPCServers.Addr, userProto.RegisterUserHandler)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to register user gRPC server")
+		return err
+	}
+
+	err = a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.AuthGRPCServer.Addr, authProto.RegisterAuthHandler)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to register auth gRPC server")
 		return err
 	}
 
