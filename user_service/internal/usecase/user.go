@@ -102,7 +102,7 @@ func (s *UserUseCase) Update(ctx context.Context, user model.User) (model.User, 
 func (s *UserUseCase) GetProfile(ctx context.Context, id int64) (model.User, error) {
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
-		return model.User{}, err
+		return model.User{}, model.ErrNotFound
 	}
 
 	return user, nil

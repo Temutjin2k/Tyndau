@@ -43,7 +43,7 @@ func (u *UserGRPCHandler) Profile(ctx context.Context, req *userpb.ProfileReques
 
 	user, err := u.uc.GetProfile(ctx, req.GetUserId())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
 	return dto.ToProfileResponce(user), nil

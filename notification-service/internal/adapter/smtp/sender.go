@@ -36,7 +36,7 @@ func NewSMTPSender(config SMTPConfig, logger *logger.Logger) *SMTPSender {
 // SendEmail отправляет email через gomail
 func (s *SMTPSender) SendEmail(ctx context.Context, email *model.Email) error {
 	// Таймаут
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
 	s.logger.Info("Sending email to %s with subject: %s", email.To, email.Subject)

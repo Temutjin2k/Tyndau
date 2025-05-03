@@ -19,7 +19,7 @@ func (a *API) RegisterGRPCHandler(
 	timeOutCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	conn, err := grpcconn.New(a.cfg.Server.UserGRPCServers.Addr)
+	conn, err := grpcconn.New(endpoint)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to create connection")
 		return err

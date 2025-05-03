@@ -23,7 +23,7 @@ type API struct {
 }
 
 func New(cfg config.GRPCServer, logger *zerolog.Logger, authUseCase AuthUseCase) *API {
-	addr := fmt.Sprintf("0.0.0.0:%d", cfg.Port)
+	addr := fmt.Sprintf("127.0.0.1:%d", cfg.Port)
 
 	if logger != nil {
 		logger.Info().
@@ -83,7 +83,9 @@ func (a *API) run(ctx context.Context) error {
 	a.server = grpc.NewServer(a.setOptions(ctx)...)
 
 	// Register services
-	authpb.RegisterAuthServer(a.server, frontend.NewAuthServer(a.authUseCase, a.logger))
+	authServer := frontend.NewAuthServer(a.authUseCase, a.logger)
+
+	authpb.RegisterAuthServer(a.server, authServer)
 	reflection.Register(a.server)
 
 	a.logger.Debug().Msg("gRPC services registered")

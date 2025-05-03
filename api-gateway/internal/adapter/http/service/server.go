@@ -60,12 +60,14 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 
 // Setup all routes
 func (a *API) setupGRPCRoutes(ctx context.Context, mux *runtime.ServeMux) error {
+	a.logger.Debug().Str("user gRPC address", a.cfg.Server.UserGRPCServers.Addr).Msg("Trying to register user gRPC service")
 	err := a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.UserGRPCServers.Addr, userProto.RegisterUserHandler)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to register user gRPC server")
 		return err
 	}
 
+	a.logger.Debug().Str("auth gRPC address", a.cfg.Server.AuthGRPCServer.Addr).Msg("Trying to register auth gRPC service")
 	err = a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.AuthGRPCServer.Addr, authProto.RegisterAuthHandler)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to register auth gRPC server")
