@@ -47,9 +47,9 @@ services:
       # SMTP configuration
       - SMTP_HOST=smtp.mail.me.com
       - SMTP_PORT=587
-      - SMTP_USERNAME=..
-      - SMTP_PASSWORD=..
-      - SMTP_FROM=..
+      - SMTP_USERNAME=pinokiochan_n@icloud.com
+      - SMTP_PASSWORD=vzua-vlkb-xrql-hgzq
+      - SMTP_FROM=pinokiochan_n@icloud.com
       - TEMPLATES_DIR=/app/templates
 
 volumes:
