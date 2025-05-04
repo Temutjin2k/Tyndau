@@ -26,42 +26,6 @@ func main() {
 			"tyndau.user_registered",
 			map[string]interface{}{
 				"event_type": "user.registered",
-				"user_id":    "user-001",
-				"email":      "beibarys7ergaliev@gmail.com",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"name": "Beibars",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "user.registered",
-				"user_id":    "user-002",
-				"email":      "bakhytzhanabdilmazhit@gmail.com",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"name": "Bakhytzhan",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "user.registered",
-				"user_id":    "user-003",
-				"email":      "mudrec6putei228@mail.ru",
-				"timestamp":  timestamp,
-				"data": map[string]interface{}{
-					"name": "Mudrec",
-				},
-			},
-		},
-		{
-			"tyndau.user_registered",
-			map[string]interface{}{
-				"event_type": "user.registered",
 				"user_id":    "user-004",
 				"email":      "230311@astanait.edu.kz",
 				"timestamp":  timestamp,
@@ -78,8 +42,27 @@ func main() {
 				"email":      "230311@astanait.edu.kz",
 				"timestamp":  timestamp,
 				"data": map[string]interface{}{
-					"album_name":  "Dreams of AITU",
-					"artist_name": "Synthfox",
+					"album_name":  "Key",
+					"artist_name": "1",
+				},
+			},
+		},
+		// Добавляем новое событие для массовой рассылки
+		{
+			"tyndau.album_released_mass",
+			map[string]interface{}{
+				"event_type": "music.album_released_mass",
+				"user_id":    "admin-001",
+				"timestamp":  timestamp,
+				"data": map[string]interface{}{
+					"album_name":  "Kazakh Vibes",
+					"artist_name": "DJ Almaty",
+					"emails": []string{
+						"beibarys7ergaliev@gmail.com",
+						"bakhytzhanabdilmazhit@gmail.com",
+						"mudrec6putei228@mail.ru",
+						"230311@astanait.edu.kz",
+					},
 				},
 			},
 		},

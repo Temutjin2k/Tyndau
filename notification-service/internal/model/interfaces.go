@@ -8,6 +8,7 @@ type EventProcessor interface {
 	// Add this method to match what's being called in consumer.go
 	ProcessUserRegistered(data []byte) error
 	ProcessAlbumReleased(data []byte) error
+	ProcessAlbumReleasedMass(data []byte) error
 }
 
 // EmailSender sends emails
@@ -19,6 +20,8 @@ type EmailSender interface {
 type EmailSenderUseCase interface {
 	SendUserRegisteredEmail(ctx context.Context, email, name string) error
 	SendAlbumReleasedEmail(ctx context.Context, email, albumName, artistName string) error
+	SendAlbumReleasedMassEmail(ctx context.Context, emails []string, albumName, artistName string) error
+	
 }
 
 // TemplateEngine renders templates

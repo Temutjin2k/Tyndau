@@ -1,7 +1,7 @@
 package nats
 
 import (
-	"encoding/json" // Импортируем json
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -71,8 +71,9 @@ func (c *Consumer) SubscribeToEvents(ctx context.Context) error {
 
     // Используем строковые значения, а не константы
     subjects := map[string]string{
-        "user_registered":  "user.registered",
-        "album_released":   "music.album_released",
+        "user_registered":     "user.registered",
+        "album_released":      "music.album_released",
+        "album_released_mass": "music.album_released_mass", // Добавляем новый тип события
     }
 
     for subject, eventType := range subjects {
@@ -110,6 +111,8 @@ func (c *Consumer) SubscribeToEvents(ctx context.Context) error {
                 processErr = c.handler.ProcessUserRegistered(msg.Data())
             case "music.album_released": // Используем строку для типа события
                 processErr = c.handler.ProcessAlbumReleased(msg.Data())
+            case "music.album_released_mass": // Добавляем обработку нового типа события
+                processErr = c.handler.ProcessAlbumReleasedMass(msg.Data())
             default:
                 log.Printf("⚠️ Unknown event type: %s", event.Type)
             }
