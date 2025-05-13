@@ -6,6 +6,8 @@ import (
 	"net"
 
 	"github.com/Temutjin2k/Tyndau/music-service/config"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/grpc/server/frontend"
+	musicpb "github.com/Temutjin2k/TyndauProto/gen/go/music"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -16,9 +18,11 @@ type API struct {
 	cfg    config.GRPCServer
 	addr   string
 	logger *zerolog.Logger
+
+	musicUseCase MusicUseCase
 }
 
-func New(cfg config.GRPCServer, logger *zerolog.Logger) *API {
+func New(cfg config.GRPCServer, logger *zerolog.Logger, MusicUseCase MusicUseCase) *API {
 	addr := fmt.Sprintf("127.0.0.1:%d", cfg.Port)
 
 	return &API{
@@ -71,6 +75,10 @@ func (a *API) run(ctx context.Context) error {
 	a.server = grpc.NewServer(a.setOptions(ctx)...)
 
 	// Register services
+	musicServer := frontend.NewMusicServer(a.musicUseCase, a.logger)
+	musicpb.RegisterMusicServer(a.server, musicServer)
+
+	// Register grpc server
 	reflection.Register(a.server)
 
 	a.logger.Debug().Msg("gRPC services registered")

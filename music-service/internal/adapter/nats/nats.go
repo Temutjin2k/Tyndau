@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	nats "github.com/nats-io/nats.go"
 )
@@ -71,7 +72,7 @@ func (p *Producer) Close() {
 // HealthCheck verifies the producer is healthy
 func (p *Producer) HealthCheck() error {
 	if !p.conn.IsConnected() {
-		return errors.New("not connected to NUTS server")
+		return fmt.Errorf("not connected to NUTS server, Url: %v", p.cfg.URL)
 	}
 	return nil
 }
