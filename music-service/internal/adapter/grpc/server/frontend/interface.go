@@ -6,7 +6,7 @@ import (
 	"github.com/Temutjin2k/Tyndau/music-service/internal/model"
 )
 
-type MusicUseCase interface {
+type SongUseCase interface {
 	// Upload saves song metadata after file is uploaded to MinIO
 	Upload(ctx context.Context, req model.Song) (model.Song, error)
 

@@ -2,27 +2,44 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/Temutjin2k/Tyndau/music-service/config"
 	grpcserver "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/grpc/server"
-	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/nats"
+	postgresrepo "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/postgres"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/usecase"
+	"github.com/Temutjin2k/Tyndau/music-service/pkg/postgres"
 	"github.com/rs/zerolog"
 )
 
 const serviceName = "music-service"
 
 type App struct {
-	grpcServer   *grpcserver.API
-	natsProducer *nats.Producer
+	grpcServer *grpcserver.API
+	postgresDB *postgres.PostgreDB
 
 	logger *zerolog.Logger
 }
 
 func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App, error) {
+
+	postgresDB, err := postgres.New(ctx, cfg.Postgres)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to connect to Postgres")
+		return nil, fmt.Errorf("postgres: %w", err)
+	}
+
+	_ = postgresrepo.NewSongRepository(postgresDB.Pool)
+	songUseCase := usecase.NewSongService(nil)
+	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, songUseCase)
+
 	app := &App{
+		grpcServer: grpcServer,
+		postgresDB: postgresDB,
+
 		logger: logger,
 	}
 
@@ -34,9 +51,6 @@ func (a *App) Close(ctx context.Context) {
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to stop http server")
 	}
-
-	a.natsProducer.Close()
-
 }
 
 func (a *App) Run() error {

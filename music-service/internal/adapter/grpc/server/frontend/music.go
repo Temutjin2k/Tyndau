@@ -11,19 +11,19 @@ import (
 type MusicServer struct {
 	musicpb.UnimplementedMusicServer
 
-	musicService MusicUseCase
+	songService SongUseCase
 }
 
-func NewMusicServer(musicService MusicUseCase, log *zerolog.Logger) *MusicServer {
+func NewMusicServer(musicService SongUseCase, log *zerolog.Logger) *MusicServer {
 	return &MusicServer{
-		musicService: musicService,
+		songService: musicService,
 	}
 }
 
 func (s *MusicServer) Upload(ctx context.Context, req *musicpb.UploadSongRequest) (*musicpb.UploadSongResponse, error) {
 	song := dto.SongFromUploadRequest(req)
 
-	created, err := s.musicService.Upload(ctx, song)
+	created, err := s.songService.Upload(ctx, song)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (s *MusicServer) Upload(ctx context.Context, req *musicpb.UploadSongRequest
 
 // GetUploadURL returns a presigned PUT URL and public file URL
 func (s *MusicServer) GetUploadURL(ctx context.Context, req *musicpb.GetUploadURLRequest) (*musicpb.GetUploadURLResponse, error) {
-	uploadURL, err := s.musicService.UploadURL(ctx, req.Filename)
+	uploadURL, err := s.songService.UploadURL(ctx, req.Filename)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *MusicServer) GetUploadURL(ctx context.Context, req *musicpb.GetUploadUR
 func (s *MusicServer) GetSong(ctx context.Context, req *musicpb.GetSongRequest) (*musicpb.GetSongResponse, error) {
 	id := req.Id
 
-	song, err := s.musicService.GetSong(ctx, id)
+	song, err := s.songService.GetSong(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (s *MusicServer) GetSong(ctx context.Context, req *musicpb.GetSongRequest) 
 func (s *MusicServer) Search(ctx context.Context, req *musicpb.SearchSongsRequest) (*musicpb.SearchSongsResponse, error) {
 	search := dto.SongSearchFromRequest(req)
 
-	results, err := s.musicService.Search(ctx, search)
+	results, err := s.songService.Search(ctx, search)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (s *MusicServer) Search(ctx context.Context, req *musicpb.SearchSongsReques
 func (s *MusicServer) Delete(ctx context.Context, req *musicpb.DeleteSongRequest) (*musicpb.DeleteSongResponse, error) {
 	id := req.Id
 
-	if err := s.musicService.Delete(ctx, id); err != nil {
+	if err := s.songService.Delete(ctx, id); err != nil {
 		return nil, err
 	}
 
