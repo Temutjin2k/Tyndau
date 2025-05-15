@@ -1,6 +1,7 @@
 package config
 
 import (
+	"path/filepath"
 	"time"
 
 	nats "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/nats"
@@ -37,12 +38,15 @@ type (
 func New() (*Config, error) {
 	var cfg Config
 
-	err := godotenv.Load()
-	if err != nil {
+	// Пытаемся загрузить .env
+	if err := godotenv.Load(filepath.Join("cmd", "music", ".env")); err != nil {
 		return &cfg, err
 	}
 
-	err = env.Parse(&cfg)
+	// Парсим переменные окружения
+	if err := env.Parse(&cfg); err != nil {
+		return &cfg, err
+	}
 
-	return &cfg, err
+	return &cfg, nil
 }

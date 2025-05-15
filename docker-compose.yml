@@ -56,6 +56,31 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0000
+      POSTGRES_DB: music_service
+    ports: [ "5433:5432" ]
+
+  redis:
+    image: redis:7-alpine
+    ports: [ "6379:6379" ]
+    restart: unless-stopped
+
+  music-service:
+    build:
+      context: ./music-service
+      dockerfile: Dockerfile
+    depends_on: [ postgres, redis ]
+    environment:
+      POSTGRES_DSN: "postgres://postgres:0000@postgres:5433/music_service?sslmode=disable"
+      REDIS_ADDR: "redis:6379"
+      CACHE_TTL_SECONDS: "300"
+    ports: [ "50051:50051" ]
+
+
 networks:
   app-network:
     driver: bridge

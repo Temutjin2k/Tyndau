@@ -7,14 +7,12 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-func (a *API) setOptions(ctx context.Context) []grpc.ServerOption {
-	opts := []grpc.ServerOption{
+func (a *API) setOptions(_ context.Context) []grpc.ServerOption {
+	return []grpc.ServerOption{
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionAge:      a.cfg.MaxConnectionAge,
 			MaxConnectionAgeGrace: a.cfg.MaxConnectionAgeGrace,
 		}),
-		grpc.MaxRecvMsgSize(a.cfg.MaxRecvMsgSizeMiB * (1024 * 1024)), // MaxRecvSize * 1 MB
+		grpc.MaxRecvMsgSize(a.cfg.MaxRecvMsgSizeMiB * 1024 * 1024),
 	}
-
-	return opts
 }

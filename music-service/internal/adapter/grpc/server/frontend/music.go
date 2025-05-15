@@ -3,91 +3,86 @@ package frontend
 import (
 	"context"
 
-	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/grpc/server/frontend/dto"
-	musicpb "github.com/Temutjin2k/TyndauProto/gen/go/music"
+	pb "github.com/Temutjin2k/Tyndau/music-service/internal/api/song/v1"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/song/entity"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/song/usecase"
 	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type MusicServer struct {
-	musicpb.UnimplementedMusicServer
-
-	songService SongUseCase
+type SongHandler struct {
+	pb.UnimplementedSongServiceServer
+	uc     usecase.SongService
+	logger *zerolog.Logger
 }
 
-func NewMusicServer(musicService SongUseCase, log *zerolog.Logger) *MusicServer {
-	return &MusicServer{
-		songService: musicService,
+func NewSongHandler(uc usecase.SongService, log *zerolog.Logger) *SongHandler {
+	return &SongHandler{uc: uc, logger: log}
+}
+
+/* ---------- helpers ---------- */
+
+func toEntity(p *pb.Song) *entity.Song {
+	if p == nil {
+		return nil
+	}
+	return &entity.Song{
+		ID:          p.Id,
+		Title:       p.Title,
+		Artist:      p.Artist,
+		Album:       p.Album,
+		Genre:       p.Genre,
+		DurationSec: p.DurationSec,
+		FileURL:     p.FileUrl,
+		ReleasedAt:  p.ReleasedAt.AsTime(),
 	}
 }
 
-func (s *MusicServer) Upload(ctx context.Context, req *musicpb.UploadSongRequest) (*musicpb.UploadSongResponse, error) {
-	song := dto.SongFromUploadRequest(req)
+func toProto(e *entity.Song) *pb.Song {
+	if e == nil {
+		return nil
+	}
+	return &pb.Song{
+		Id:          e.ID,
+		Title:       e.Title,
+		Artist:      e.Artist,
+		Album:       e.Album,
+		Genre:       e.Genre,
+		DurationSec: e.DurationSec,
+		FileUrl:     e.FileURL,
+		ReleasedAt:  timestamppb.New(e.ReleasedAt),
+	}
+}
 
-	created, err := s.songService.Upload(ctx, song)
+/* ---------- RPC-методы ---------- */
+
+func (h *SongHandler) CreateSong(ctx context.Context, r *pb.CreateSongRequest) (*pb.Song, error) {
+	res, err := h.uc.Create(ctx, toEntity(r.Song))
+	return toProto(res), err
+}
+
+func (h *SongHandler) GetSong(ctx context.Context, r *pb.GetSongRequest) (*pb.Song, error) {
+	res, err := h.uc.Get(ctx, r.Id)
+	return toProto(res), err
+}
+
+func (h *SongHandler) ListSongs(ctx context.Context, r *pb.ListSongsRequest) (*pb.ListSongsResponse, error) {
+	list, err := h.uc.List(ctx, int(r.Limit), int(r.Offset))
 	if err != nil {
 		return nil, err
 	}
-
-	return &musicpb.UploadSongResponse{
-		Id: created.ID,
-	}, nil
+	resp := &pb.ListSongsResponse{}
+	for _, s := range list {
+		resp.Songs = append(resp.Songs, toProto(s))
+	}
+	return resp, nil
 }
 
-// GetUploadURL returns a presigned PUT URL and public file URL
-func (s *MusicServer) GetUploadURL(ctx context.Context, req *musicpb.GetUploadURLRequest) (*musicpb.GetUploadURLResponse, error) {
-	uploadURL, err := s.songService.UploadURL(ctx, req.Filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return &musicpb.GetUploadURLResponse{
-		UploadUrl: uploadURL,
-		FileUrl:   uploadURL, // assuming same URL is usable for later GET; adjust if needed
-	}, nil
+func (h *SongHandler) UpdateSong(ctx context.Context, r *pb.UpdateSongRequest) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, h.uc.Update(ctx, toEntity(r.Song))
 }
 
-// GetSong fetches a song by ID
-func (s *MusicServer) GetSong(ctx context.Context, req *musicpb.GetSongRequest) (*musicpb.GetSongResponse, error) {
-	id := req.Id
-
-	song, err := s.songService.GetSong(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &musicpb.GetSongResponse{
-		Song: dto.SongToProto(song),
-	}, nil
-}
-
-// Search finds songs by text query
-func (s *MusicServer) Search(ctx context.Context, req *musicpb.SearchSongsRequest) (*musicpb.SearchSongsResponse, error) {
-	search := dto.SongSearchFromRequest(req)
-
-	results, err := s.songService.Search(ctx, search)
-	if err != nil {
-		return nil, err
-	}
-
-	var protoSongs []*musicpb.Song
-	for _, song := range results {
-		protoSongs = append(protoSongs, dto.SongToProto(song))
-	}
-
-	return &musicpb.SearchSongsResponse{
-		Songs: protoSongs,
-	}, nil
-}
-
-// Delete removes a song by ID
-func (s *MusicServer) Delete(ctx context.Context, req *musicpb.DeleteSongRequest) (*musicpb.DeleteSongResponse, error) {
-	id := req.Id
-
-	if err := s.songService.Delete(ctx, id); err != nil {
-		return nil, err
-	}
-
-	return &musicpb.DeleteSongResponse{
-		Success: true,
-	}, nil
+func (h *SongHandler) DeleteSong(ctx context.Context, r *pb.DeleteSongRequest) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, h.uc.Delete(ctx, r.Id)
 }
