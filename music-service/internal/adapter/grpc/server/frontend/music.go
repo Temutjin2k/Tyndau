@@ -8,19 +8,19 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type MusicServer struct {
+type MusicGRPCHandler struct {
 	musicpb.UnimplementedMusicServer
 
 	songService SongUseCase
 }
 
-func NewMusicServer(musicService SongUseCase, log *zerolog.Logger) *MusicServer {
-	return &MusicServer{
+func NewMusicServer(musicService SongUseCase, log *zerolog.Logger) *MusicGRPCHandler {
+	return &MusicGRPCHandler{
 		songService: musicService,
 	}
 }
 
-func (s *MusicServer) Upload(ctx context.Context, req *musicpb.UploadSongRequest) (*musicpb.UploadSongResponse, error) {
+func (s *MusicGRPCHandler) Upload(ctx context.Context, req *musicpb.UploadSongRequest) (*musicpb.UploadSongResponse, error) {
 	song := dto.SongFromUploadRequest(req)
 
 	created, err := s.songService.Upload(ctx, song)
@@ -34,7 +34,7 @@ func (s *MusicServer) Upload(ctx context.Context, req *musicpb.UploadSongRequest
 }
 
 // GetUploadURL returns a presigned PUT URL and public file URL
-func (s *MusicServer) GetUploadURL(ctx context.Context, req *musicpb.GetUploadURLRequest) (*musicpb.GetUploadURLResponse, error) {
+func (s *MusicGRPCHandler) GetUploadURL(ctx context.Context, req *musicpb.GetUploadURLRequest) (*musicpb.GetUploadURLResponse, error) {
 	uploadURL, err := s.songService.UploadURL(ctx, req.Filename)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (s *MusicServer) GetUploadURL(ctx context.Context, req *musicpb.GetUploadUR
 }
 
 // GetSong fetches a song by ID
-func (s *MusicServer) GetSong(ctx context.Context, req *musicpb.GetSongRequest) (*musicpb.GetSongResponse, error) {
+func (s *MusicGRPCHandler) GetSong(ctx context.Context, req *musicpb.GetSongRequest) (*musicpb.GetSongResponse, error) {
 	id := req.Id
 
 	song, err := s.songService.GetSong(ctx, id)
@@ -60,11 +60,11 @@ func (s *MusicServer) GetSong(ctx context.Context, req *musicpb.GetSongRequest) 
 	}, nil
 }
 
-// Search finds songs by text query
-func (s *MusicServer) Search(ctx context.Context, req *musicpb.SearchSongsRequest) (*musicpb.SearchSongsResponse, error) {
+// Search return list of songs by given search query, limit and offset
+func (s *MusicGRPCHandler) Search(ctx context.Context, req *musicpb.SearchSongsRequest) (*musicpb.SearchSongsResponse, error) {
 	search := dto.SongSearchFromRequest(req)
 
-	results, err := s.songService.Search(ctx, search)
+	results, err := s.songService.List(ctx, search)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (s *MusicServer) Search(ctx context.Context, req *musicpb.SearchSongsReques
 }
 
 // Delete removes a song by ID
-func (s *MusicServer) Delete(ctx context.Context, req *musicpb.DeleteSongRequest) (*musicpb.DeleteSongResponse, error) {
+func (s *MusicGRPCHandler) Delete(ctx context.Context, req *musicpb.DeleteSongRequest) (*musicpb.DeleteSongResponse, error) {
 	id := req.Id
 
 	if err := s.songService.Delete(ctx, id); err != nil {

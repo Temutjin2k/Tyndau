@@ -16,8 +16,7 @@ type SongUseCase interface {
 	// GetSong fetches a song by its ID
 	GetSong(ctx context.Context, id int64) (model.Song, error)
 
-	// Search searches songs by query
-	Search(ctx context.Context, req model.SongSearch) ([]model.Song, error)
+	List(ctx context.Context, req model.ListRequest) ([]model.Song, error)
 
 	// Delete deletes a song by ID
 	Delete(ctx context.Context, id int64) error

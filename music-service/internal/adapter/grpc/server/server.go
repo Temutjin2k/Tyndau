@@ -29,6 +29,8 @@ func New(cfg config.GRPCServer, logger *zerolog.Logger, MusicUseCase MusicUseCas
 		cfg:    cfg,
 		addr:   addr,
 		logger: logger,
+
+		musicUseCase: MusicUseCase,
 	}
 }
 

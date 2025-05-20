@@ -32,8 +32,8 @@ func SongToProto(song model.Song) *musicpb.Song {
 }
 
 // Convert SearchSongsRequest to model.SongSearch
-func SongSearchFromRequest(req *musicpb.SearchSongsRequest) model.SongSearch {
-	return model.SongSearch{
+func SongSearchFromRequest(req *musicpb.SearchSongsRequest) model.ListRequest {
+	return model.ListRequest{
 		Query:  req.Query,
 		Limit:  req.Limit,
 		Offset: req.Offset,

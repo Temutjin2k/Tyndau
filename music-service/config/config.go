@@ -12,9 +12,9 @@ import (
 type (
 	Config struct {
 		Server             Server
-		GRPCServices       GRPCServices
 		NatsProducerConfig nats.ProducerConfig
 		Postgres           postgres.Config
+		Redis              Redis
 
 		Version string `env:"VERSION"`
 	}
@@ -30,7 +30,11 @@ type (
 		MaxConnectionAgeGrace time.Duration `env:"GRPC_MAX_CONNECTION_AGE_GRACE" envDefault:"10s"`
 	}
 
-	GRPCServices struct {
+	Redis struct {
+		Addr     string        `env:"REDIS_ADDR" envDefault:"localhost:6379"`
+		Password string        `env:"REDIS_PASSWORD,required"`
+		DB       int           `env:"REDIS_DB" envDefault:"0"`
+		TTL      time.Duration `env:"CACHE_TTL_SECONDS" envDefault:"300s"`
 	}
 )
 
@@ -42,7 +46,12 @@ func New() (*Config, error) {
 		return &cfg, err
 	}
 
-	err = env.Parse(&cfg)
+	// Parsing enviromental variables
+	if err := env.Parse(&cfg); err != nil {
+		return nil, err
+	}
 
-	return &cfg, err
+	// Print config for debug
+	PrintConfig(cfg)
+	return &cfg, nil
 }

@@ -8,14 +8,14 @@ type Song struct {
 	Artist          string
 	Album           string
 	Genre           string
-	ReleaseDate     time.Time
-	DurationSeconds int32
 	FileURL         string
+	DurationSeconds int32
+	ReleaseDate     time.Time
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
 
-type SongSearch struct {
+type ListRequest struct {
 	Query  string
 	Limit  int32
 	Offset int32

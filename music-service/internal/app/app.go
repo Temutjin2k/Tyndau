@@ -10,6 +10,7 @@ import (
 	"github.com/Temutjin2k/Tyndau/music-service/config"
 	grpcserver "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/grpc/server"
 	postgresrepo "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/postgres"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/redis"
 	"github.com/Temutjin2k/Tyndau/music-service/internal/usecase"
 	"github.com/Temutjin2k/Tyndau/music-service/pkg/postgres"
 	"github.com/rs/zerolog"
@@ -25,15 +26,22 @@ type App struct {
 }
 
 func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App, error) {
-
+	// Postgres database connection
 	postgresDB, err := postgres.New(ctx, cfg.Postgres)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to connect to Postgres")
 		return nil, fmt.Errorf("postgres: %w", err)
 	}
 
-	_ = postgresrepo.NewSongRepository(postgresDB.Pool)
-	songUseCase := usecase.NewSongService(nil)
+	// Redis cache
+	redis, err := redis.New(ctx, cfg.Redis)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to connect to Redis")
+		return nil, err
+	}
+
+	song_repo := postgresrepo.NewSongRepository(postgresDB.Pool)
+	songUseCase := usecase.NewSongService(song_repo, redis, logger)
 	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, songUseCase)
 
 	app := &App{
