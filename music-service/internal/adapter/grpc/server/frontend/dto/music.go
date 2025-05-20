@@ -23,7 +23,7 @@ func SongFromUploadRequest(req *musicpb.UploadSongRequest) (model.Song, error) {
 		Genre:           req.GetGenre(),
 		DurationSeconds: req.GetDurationSeconds(),
 		ReleaseDate:     releaseDate,
-		FileURL:         req.GetFileUrl(),
+		Filename:        req.Filename,
 	}, nil
 }
 

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Song Uploader</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .song-item { margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+    audio { width: 100%; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🎵 Upload a Song</h1>
+  <input type="file" id="fileInput" />
+  <button onclick="upload()">Upload</button>
+
+  <h2>🎶 All Songs</h2>
+  <div id="songsContainer">Loading...</div>
+
+  <script>
+    async function upload() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return alert('Choose a file');
+
+      const metadata = {
+        filename: file.name,
+        title: file.name.split('.')[0],
+        artist: 'Unknown Artist',
+        album: 'Unknown Album',
+        genre: 'Unknown Genre',
+        durationSeconds: 180,
+        releaseDate: '2025-01-01'
+      };
+
+      const res = await fetch('http://localhost:8080/v1/music/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(metadata)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Presigned URL error:', data);
+        return alert('Failed to get upload URL');
+      }
+
+      const { uploadUrl, fileUrl } = data;
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type }
+      });
+
+      if (!uploadRes.ok) {
+        const text = await uploadRes.text();
+        console.error('MinIO upload failed:', text);
+        return alert('Upload failed');
+      }
+
+      alert('Upload successful!');
+      await fetchSongs(); // Reload songs after upload
+    }
+
+    async function fetchSongs() {
+      const container = document.getElementById('songsContainer');
+      container.innerHTML = 'Loading...';
+
+      try {
+        const res = await fetch('http://localhost:8080/v1/music/search');
+        const data = await res.json();
+        const songs = data.songs;
+
+        if (!songs.length) {
+          container.innerHTML = 'No songs found.';
+          return;
+        }
+
+        container.innerHTML = '';
+        songs.forEach(song => {
+          const div = document.createElement('div');
+          div.className = 'song-item';
+          div.innerHTML = `
+            <strong>${song.title}</strong> by ${song.artist}<br/>
+            Album: ${song.album} | Genre: ${song.genre} | Released: ${song.releaseDate}<br/>
+            <audio controls src="${song.fileUrl}"></audio>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error('Fetch songs failed:', err);
+        container.innerHTML = 'Failed to load songs.';
+      }
+    }
+
+    // Load songs on page load
+    fetchSongs();
+  </script>
+</body>
+</html>

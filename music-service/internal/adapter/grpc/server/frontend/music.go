@@ -28,26 +28,15 @@ func (s *MusicGRPCHandler) Upload(ctx context.Context, req *musicpb.UploadSongRe
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request: %v", err)
 	}
 
-	created, err := s.songService.Upload(ctx, song)
+	createdSong, urls, err := s.songService.Upload(ctx, song)
 	if err != nil {
 		return nil, err
 	}
 
 	return &musicpb.UploadSongResponse{
-		Id: created.ID,
-	}, nil
-}
-
-// GetUploadURL returns a presigned PUT URL and public file URL
-func (s *MusicGRPCHandler) GetUploadURL(ctx context.Context, req *musicpb.GetUploadURLRequest) (*musicpb.GetUploadURLResponse, error) {
-	uploadURL, fileUrl, err := s.songService.UploadURL(ctx, req.Filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return &musicpb.GetUploadURLResponse{
-		UploadUrl: uploadURL,
-		FileUrl:   fileUrl, // assuming same URL is usable for later GET; adjust if needed
+		Id:        createdSong.ID,
+		UploadUrl: urls.UploadURL,
+		FileUrl:   urls.FileURL,
 	}, nil
 }
 

@@ -36,16 +36,36 @@ func NewMinioStorage(ctx context.Context, cfg MinioConfig) (*MinioStorage, error
 		return nil, fmt.Errorf("failed to initialize MinIO client: %w", err)
 	}
 
-	// Ensure bucket exists or create it
+	// Проверяем, существует ли бакет
 	exists, err := client.BucketExists(ctx, cfg.Bucket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check bucket existence: %w", err)
 	}
+
 	if !exists {
+		// Создаем бакет, если не существует
 		err = client.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bucket: %w", err)
 		}
+	}
+
+	// Устанавливаем публичную политику на бакет (read-only для всех)
+	policy := fmt.Sprintf(`{
+		"Version":"2012-10-17",
+		"Statement":[
+			{
+				"Effect":"Allow",
+				"Principal":{"AWS":["*"]},
+				"Action":["s3:GetObject"],
+				"Resource":["arn:aws:s3:::%s/*"]
+			}
+		]
+	}`, cfg.Bucket)
+
+	err = client.SetBucketPolicy(ctx, cfg.Bucket, policy)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set bucket policy: %w", err)
 	}
 
 	return &MinioStorage{
@@ -66,17 +86,28 @@ func (m *MinioStorage) PresignedPutURL(ctx context.Context, bucket, objectName s
 }
 
 // GenerateSongURLs returns both the presigned PUT upload URL and the public GET URL
-func (m *MinioStorage) GenerateSongURLs(ctx context.Context, songID int64, fileName string) (string, string, error) {
-	// Create object key, e.g. "songs/1234_filename.mp3"
-	objectKey := fmt.Sprintf("songs/%d_%s", songID, fileName)
+// func (m *MinioStorage) GenerateSongURLs(ctx context.Context, songID int64, fileName string) (string, string, error) {
+// 	// Create object key, e.g. "songs/1234_filename.mp3"
+// 	objectKey := fmt.Sprintf("songs/%d_%s", songID, fileName)
 
-	// Generate presigned PUT URL
+// 	// Generate presigned PUT URL
+// 	uploadURL, err := m.client.PresignedPutObject(ctx, m.bucket, objectKey, time.Minute*10)
+// 	if err != nil {
+// 		return "", "", fmt.Errorf("failed to generate presigned upload URL: %w", err)
+// 	}
+
+// 	// Build public URL manually using public base URL
+// 	publicURL := fmt.Sprintf("%s/%s/%s", m.publicURL, m.bucket, objectKey)
+
+// 	return uploadURL.String(), publicURL, nil
+// }
+
+func (m *MinioStorage) GenerateSongURLs(ctx context.Context, objectKey string) (string, string, error) {
 	uploadURL, err := m.client.PresignedPutObject(ctx, m.bucket, objectKey, time.Minute*10)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to generate presigned upload URL: %w", err)
 	}
 
-	// Build public URL manually using public base URL
 	publicURL := fmt.Sprintf("%s/%s/%s", m.publicURL, m.bucket, objectKey)
 
 	return uploadURL.String(), publicURL, nil

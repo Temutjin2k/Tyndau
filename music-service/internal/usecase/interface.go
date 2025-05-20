@@ -20,8 +20,8 @@ type SongRepository interface {
 	Delete(ctx context.Context, id int64) error
 }
 
-// Uploader defines the behavior for generating secure upload links.
-type Uploader interface {
+// UploaderV1 defines the behavior for generating secure upload links.
+type UploaderV1 interface {
 	// PresignedPutURL generates a temporary URL for uploading a file directly to storage.
 	// bucket: the name of the bucket (e.g., "music")
 	// objectName: the name of the file (e.g., "song123.mp3")
@@ -31,4 +31,8 @@ type Uploader interface {
 
 type UploaderV2 interface {
 	GenerateSongURLs(ctx context.Context, songID int64, fileName string) (string, string, error)
+}
+
+type UploaderV3 interface {
+	GenerateSongURLs(ctx context.Context, objectKey string) (string, string, error)
 }

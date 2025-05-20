@@ -8,6 +8,7 @@ type Song struct {
 	Artist          string
 	Album           string
 	Genre           string
+	Filename        string
 	FileURL         string
 	DurationSeconds int32
 	ReleaseDate     time.Time
@@ -19,4 +20,9 @@ type ListRequest struct {
 	Query  string
 	Limit  int32
 	Offset int32
+}
+
+type UploadLink struct {
+	UploadURL string
+	FileURL   string
 }

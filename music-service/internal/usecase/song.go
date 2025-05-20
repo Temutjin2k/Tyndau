@@ -3,21 +3,21 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Temutjin2k/Tyndau/music-service/internal/model"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
 type Song struct {
 	repo     SongRepository
 	cache    Cache
-	uploader Uploader
+	uploader UploaderV3
 
 	logger *zerolog.Logger
 }
 
-func NewSongService(songRepo SongRepository, cache Cache, uploader Uploader, logger *zerolog.Logger) *Song {
+func NewSongService(songRepo SongRepository, cache Cache, uploader UploaderV3, logger *zerolog.Logger) *Song {
 	return &Song{
 		repo:     songRepo,
 		cache:    cache,
@@ -28,33 +28,40 @@ func NewSongService(songRepo SongRepository, cache Cache, uploader Uploader, log
 }
 
 // Upload saves song metadata after file is uploaded to MinIO
-func (s *Song) Upload(ctx context.Context, req model.Song) (model.Song, error) {
-	logger := s.logger.With().Int64("song_id", req.ID).Logger()
+func (s *Song) Upload(ctx context.Context, req model.Song) (model.Song, model.UploadLink, error) {
+	logger := s.logger.With().Str("filename", req.Filename).Logger()
 
-	out, err := s.repo.Create(ctx, &req)
+	// 1. Генерируем presigned URL и публичный URL для загрузки файла
+	objectKey := generateObjectKey(req.Filename)
+
+	uploadURL, publicURL, err := s.uploader.GenerateSongURLs(ctx, objectKey)
 	if err != nil {
-		logger.Error().Err(err).Msg("failed to upload song")
-		return model.Song{}, fmt.Errorf("failed to upload song: %w", err)
+		logger.Error().Err(err).Msg("failed to generate presigned URLs")
+		return model.Song{}, model.UploadLink{}, fmt.Errorf("failed to generate presigned URLs: %w", err)
 	}
 
+	// 2. Записываем публичный URL в модель как FileURL
+	req.FileURL = publicURL
+
+	// 3. Создаем запись песни с метаданными и FileURL
+	out, err := s.repo.Create(ctx, &req)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to create song record")
+		return model.Song{}, model.UploadLink{}, fmt.Errorf("failed to create song record: %w", err)
+	}
+
+	// 4. Сбрасываем кэш по песне
 	if err := s.cache.Delete(ctx, out.ID); err != nil {
 		logger.Warn().Err(err).Msg("failed to invalidate cache after upload")
 	}
 
-	logger.Info().Msg("song uploaded successfully")
-	return *out, nil
-}
+	logger.Info().Msg("song record created with presigned URLs")
 
-// UploadURL generates a presigned PUT URL and returns file URL
-func (s *Song) UploadURL(ctx context.Context, filename string) (uploadURL, publicURL string, err error) {
-	uploadURL, err = s.uploader.PresignedPutURL(ctx, "song", filename, 15*time.Minute)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to create presigned URL: %w", err)
-	}
-
-	// You can make this domain configurable via env or config struct
-	publicURL = fmt.Sprintf("http://localhost:9000/song/%s", filename)
-	return uploadURL, publicURL, nil
+	// 5. Возвращаем данные и ссылки для загрузки
+	return *out, model.UploadLink{
+		UploadURL: uploadURL,
+		FileURL:   publicURL,
+	}, nil
 }
 
 // GetSong fetches a song by its ID
@@ -124,4 +131,9 @@ func (s *Song) Delete(ctx context.Context, id int64) error {
 
 	logger.Info().Msg("song deleted successfully")
 	return nil
+}
+
+func generateObjectKey(fileName string) string {
+	id := uuid.New()
+	return fmt.Sprintf("songs/%s_%s", id.String(), fileName)
 }

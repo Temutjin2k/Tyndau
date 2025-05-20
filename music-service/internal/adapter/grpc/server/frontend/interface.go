@@ -8,10 +8,7 @@ import (
 
 type SongUseCase interface {
 	// Upload saves song metadata after file is uploaded to MinIO
-	Upload(ctx context.Context, req model.Song) (model.Song, error)
-
-	// UploadURL generates a presigned PUT URL and returns file URL
-	UploadURL(ctx context.Context, filename string) (string, string, error)
+	Upload(ctx context.Context, req model.Song) (model.Song, model.UploadLink, error)
 
 	// GetSong fetches a song by its ID
 	GetSong(ctx context.Context, id int64) (model.Song, error)
