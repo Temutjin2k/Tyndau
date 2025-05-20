@@ -6,6 +6,8 @@ import (
 	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/grpc/server/frontend/dto"
 	musicpb "github.com/Temutjin2k/TyndauProto/gen/go/music"
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type MusicGRPCHandler struct {
@@ -21,7 +23,10 @@ func NewMusicServer(musicService SongUseCase, log *zerolog.Logger) *MusicGRPCHan
 }
 
 func (s *MusicGRPCHandler) Upload(ctx context.Context, req *musicpb.UploadSongRequest) (*musicpb.UploadSongResponse, error) {
-	song := dto.SongFromUploadRequest(req)
+	song, err := dto.SongFromUploadRequest(req)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request: %v", err)
+	}
 
 	created, err := s.songService.Upload(ctx, song)
 	if err != nil {
@@ -35,14 +40,14 @@ func (s *MusicGRPCHandler) Upload(ctx context.Context, req *musicpb.UploadSongRe
 
 // GetUploadURL returns a presigned PUT URL and public file URL
 func (s *MusicGRPCHandler) GetUploadURL(ctx context.Context, req *musicpb.GetUploadURLRequest) (*musicpb.GetUploadURLResponse, error) {
-	uploadURL, err := s.songService.UploadURL(ctx, req.Filename)
+	uploadURL, fileUrl, err := s.songService.UploadURL(ctx, req.Filename)
 	if err != nil {
 		return nil, err
 	}
 
 	return &musicpb.GetUploadURLResponse{
 		UploadUrl: uploadURL,
-		FileUrl:   uploadURL, // assuming same URL is usable for later GET; adjust if needed
+		FileUrl:   fileUrl, // assuming same URL is usable for later GET; adjust if needed
 	}, nil
 }
 
@@ -52,7 +57,7 @@ func (s *MusicGRPCHandler) GetSong(ctx context.Context, req *musicpb.GetSongRequ
 
 	song, err := s.songService.GetSong(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
 	return &musicpb.GetSongResponse{

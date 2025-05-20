@@ -11,6 +11,7 @@ import (
 	grpcserver "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/grpc/server"
 	postgresrepo "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/postgres"
 	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/redis"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/storage"
 	"github.com/Temutjin2k/Tyndau/music-service/internal/usecase"
 	"github.com/Temutjin2k/Tyndau/music-service/pkg/postgres"
 	"github.com/rs/zerolog"
@@ -40,8 +41,11 @@ func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App,
 		return nil, err
 	}
 
+	// Minio client
+	minio, err := storage.NewMinioStorage(ctx, cfg.Minio)
+
 	song_repo := postgresrepo.NewSongRepository(postgresDB.Pool)
-	songUseCase := usecase.NewSongService(song_repo, redis, logger)
+	songUseCase := usecase.NewSongService(song_repo, redis, minio, logger)
 	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, songUseCase)
 
 	app := &App{

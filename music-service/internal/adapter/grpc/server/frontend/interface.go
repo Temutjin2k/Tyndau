@@ -11,7 +11,7 @@ type SongUseCase interface {
 	Upload(ctx context.Context, req model.Song) (model.Song, error)
 
 	// UploadURL generates a presigned PUT URL and returns file URL
-	UploadURL(ctx context.Context, filename string) (string, error)
+	UploadURL(ctx context.Context, filename string) (string, string, error)
 
 	// GetSong fetches a song by its ID
 	GetSong(ctx context.Context, id int64) (model.Song, error)

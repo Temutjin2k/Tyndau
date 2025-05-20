@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Temutjin2k/Tyndau/api-gateway/config"
-	"github.com/Temutjin2k/Tyndau/api-gateway/internal/adapter/http/service/middleware"
+	m "github.com/Temutjin2k/Tyndau/api-gateway/internal/adapter/http/service/middleware"
 	authProto "github.com/Temutjin2k/TyndauProto/gen/go/auth"
 	musicProto "github.com/Temutjin2k/TyndauProto/gen/go/music"
 	userProto "github.com/Temutjin2k/TyndauProto/gen/go/user"
@@ -45,12 +45,16 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 	// Healthcheck
 	mux.HandleFunc("/healthcheck", api.HealthCheck)
 
+	// Static files
+	fs := http.FileServer(http.Dir("./web"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	// gRPC-Gateway mux
 	mux.Handle("/", grpcMux)
 
 	api.server = &http.Server{
 		Addr:           api.addr,
-		Handler:        middleware.LoggingMiddleware(mux, logger),
+		Handler:        m.LoggingMiddleware(m.CorsMiddleware(mux), logger),
 		ReadTimeout:    cfg.Server.HTTPServer.ReadTimeout,
 		WriteTimeout:   cfg.Server.HTTPServer.WriteTimeout,
 		IdleTimeout:    cfg.Server.HTTPServer.IdleTimeout,

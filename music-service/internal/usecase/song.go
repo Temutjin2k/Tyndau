@@ -3,22 +3,27 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Temutjin2k/Tyndau/music-service/internal/model"
 	"github.com/rs/zerolog"
 )
 
 type Song struct {
-	repo   SongRepository
-	cache  Cache
-	logger zerolog.Logger
+	repo     SongRepository
+	cache    Cache
+	uploader Uploader
+
+	logger *zerolog.Logger
 }
 
-func NewSongService(songRepo SongRepository, cache Cache, logger *zerolog.Logger) *Song {
+func NewSongService(songRepo SongRepository, cache Cache, uploader Uploader, logger *zerolog.Logger) *Song {
 	return &Song{
-		repo:   songRepo,
-		cache:  cache,
-		logger: logger.With().Str("component", "song_usecase").Logger(),
+		repo:     songRepo,
+		cache:    cache,
+		uploader: uploader,
+
+		logger: logger,
 	}
 }
 
@@ -41,9 +46,15 @@ func (s *Song) Upload(ctx context.Context, req model.Song) (model.Song, error) {
 }
 
 // UploadURL generates a presigned PUT URL and returns file URL
-func (s *Song) UploadURL(ctx context.Context, filename string) (string, error) {
-	s.logger.Warn().Msg("UploadURL not implemented")
-	return "", fmt.Errorf("UploadURL not implemented")
+func (s *Song) UploadURL(ctx context.Context, filename string) (uploadURL, publicURL string, err error) {
+	uploadURL, err = s.uploader.PresignedPutURL(ctx, "song", filename, 15*time.Minute)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create presigned URL: %w", err)
+	}
+
+	// You can make this domain configurable via env or config struct
+	publicURL = fmt.Sprintf("http://localhost:9000/song/%s", filename)
+	return uploadURL, publicURL, nil
 }
 
 // GetSong fetches a song by its ID

@@ -79,6 +79,7 @@ func (r *SongRepository) Get(ctx context.Context, id int64) (*model.Song, error)
 }
 
 func (r *SongRepository) List(ctx context.Context, req model.ListRequest) ([]model.Song, error) {
+	// TODO search, sorting, pagination
 	const q = `
 		SELECT 
 			id, title, artist, album, genre, duration_sec, file_url,
@@ -87,13 +88,9 @@ func (r *SongRepository) List(ctx context.Context, req model.ListRequest) ([]mod
 			songs 
 		ORDER BY 
 			id 
-		LIMIT 
-			$1 
-		OFFSET 
-			$2
 	`
 
-	rows, err := r.db.Query(ctx, q, req.Limit, req.Offset)
+	rows, err := r.db.Query(ctx, q)
 	if err != nil {
 		return nil, err
 	}

@@ -27,7 +27,7 @@ func UnaryLoggingInterceptor(log *zerolog.Logger) grpc.UnaryServerInterceptor {
 		// Initialize the log entry
 		e := log.Info().
 			Str("method", info.FullMethod).
-			Dur("duration", duration)
+			Dur("duration_ms", duration)
 
 		// Handle the error, if any
 		if err != nil {

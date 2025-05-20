@@ -1,20 +1,30 @@
 package dto
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/Temutjin2k/Tyndau/music-service/internal/model"
 	musicpb "github.com/Temutjin2k/TyndauProto/gen/go/music"
 )
 
 // Convert UploadSongRequest to model.Song
-func SongFromUploadRequest(req *musicpb.UploadSongRequest) model.Song {
-	return model.Song{
-		Title:           req.Title,
-		Artist:          req.Artist,
-		Album:           req.Album,
-		Genre:           req.Genre,
-		DurationSeconds: req.DurationSeconds,
-		FileURL:         req.FileUrl,
+func SongFromUploadRequest(req *musicpb.UploadSongRequest) (model.Song, error) {
+	// Parse the release date string into time.Time
+	releaseDate, err := time.Parse("2006-01-02", req.GetReleaseDate())
+	if err != nil {
+		return model.Song{}, fmt.Errorf("invalid release date format: %w", err)
 	}
+
+	return model.Song{
+		Title:           req.GetTitle(),
+		Artist:          req.GetArtist(),
+		Album:           req.GetAlbum(),
+		Genre:           req.GetGenre(),
+		DurationSeconds: req.GetDurationSeconds(),
+		ReleaseDate:     releaseDate,
+		FileURL:         req.GetFileUrl(),
+	}, nil
 }
 
 // Convert model.Song to proto Song

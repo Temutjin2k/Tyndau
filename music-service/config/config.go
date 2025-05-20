@@ -4,6 +4,7 @@ import (
 	"time"
 
 	nats "github.com/Temutjin2k/Tyndau/music-service/internal/adapter/nats"
+	"github.com/Temutjin2k/Tyndau/music-service/internal/adapter/storage"
 	"github.com/Temutjin2k/Tyndau/music-service/pkg/postgres"
 	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
@@ -15,6 +16,7 @@ type (
 		NatsProducerConfig nats.ProducerConfig
 		Postgres           postgres.Config
 		Redis              Redis
+		Minio              storage.MinioConfig
 
 		Version string `env:"VERSION"`
 	}
