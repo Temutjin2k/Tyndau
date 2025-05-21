@@ -124,35 +124,31 @@ func (r *SongRepository) List(ctx context.Context, req model.ListRequest) ([]mod
 	return res, rows.Err()
 }
 
+// Update updates song metadata in database
 func (r *SongRepository) Update(ctx context.Context, in *model.Song) error {
 	in.UpdatedAt = time.Now()
 
 	const q = `
-		UPDATE 
-			songs
-		SET 
-			title = $2,
-			artist = $3,
-			album = $4,
-			genre = $5,
-			duration_sec = $6,
-			file_url = $7,
-			released_at = $8,
-			updated_at = $9
-		WHERE 
-			id = $1
-	`
+        UPDATE songs
+        SET 
+            title = COALESCE($2, title),
+            artist = COALESCE($3, artist),
+            album = COALESCE($4, album),
+            genre = COALESCE($5, genre),
+            duration_sec = COALESCE($6, duration_sec),
+            released_at = COALESCE($7, released_at),
+            updated_at = $8
+        WHERE id = $1
+    `
 
 	_, err := r.db.Exec(
-		ctx,
-		q,
+		ctx, q,
 		in.ID,
 		in.Title,
 		in.Artist,
 		in.Album,
 		in.Genre,
 		in.DurationSeconds,
-		in.FileURL,
 		in.ReleaseDate,
 		in.UpdatedAt,
 	)

@@ -15,6 +15,7 @@ type SongUseCase interface {
 
 	List(ctx context.Context, req model.ListRequest) ([]model.Song, error)
 
+	Update(ctx context.Context, req model.SongUpdate) (model.Song, error)
 	// Delete deletes a song by ID
 	Delete(ctx context.Context, id int64) error
 }

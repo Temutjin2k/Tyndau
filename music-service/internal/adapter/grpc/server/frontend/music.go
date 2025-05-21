@@ -73,6 +73,23 @@ func (s *MusicGRPCHandler) Search(ctx context.Context, req *musicpb.SearchSongsR
 	}, nil
 }
 
+// Update updates song metadata
+func (s *MusicGRPCHandler) Update(ctx context.Context, req *musicpb.UpdateSongRequest) (*musicpb.UpdateSongResponse, error) {
+	// Convert protobuf request to domain model
+	updateData := dto.SongFromUpdateRequest(req)
+
+	// Call service layer
+	updatedSong, err := s.songService.Update(ctx, updateData)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to update song: %v", err)
+	}
+
+	// Convert back to protobuf response
+	return &musicpb.UpdateSongResponse{
+		Song: dto.SongToProto(updatedSong),
+	}, nil
+}
+
 // Delete removes a song by ID
 func (s *MusicGRPCHandler) Delete(ctx context.Context, req *musicpb.DeleteSongRequest) (*musicpb.DeleteSongResponse, error) {
 	id := req.Id

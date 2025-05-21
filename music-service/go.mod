@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	github.com/Temutjin2k/TyndauProto v0.0.10
+	github.com/Temutjin2k/TyndauProto v0.1.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect

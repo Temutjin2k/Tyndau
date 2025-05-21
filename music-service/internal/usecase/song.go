@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Temutjin2k/Tyndau/music-service/internal/model"
 	"github.com/google/uuid"
@@ -114,6 +115,57 @@ func (s *Song) List(ctx context.Context, req model.ListRequest) ([]model.Song, e
 
 	logger.Debug().Int("count", len(songs)).Msg("songs listed successfully")
 	return songs, nil
+}
+
+// Update updates song metadata
+func (s *Song) Update(ctx context.Context, req model.SongUpdate) (model.Song, error) {
+	logger := s.logger.With().Int64("song_id", req.ID).Logger()
+
+	// 1. Get existing song
+	existing, err := s.GetSong(ctx, req.ID)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to get song for update")
+		return model.Song{}, fmt.Errorf("failed to get song: %w", err)
+	}
+
+	// 2. Apply partial updates
+	if req.Title != nil {
+		existing.Title = *req.Title
+	}
+	if req.Artist != nil {
+		existing.Artist = *req.Artist
+	}
+	if req.Album != nil {
+		existing.Album = *req.Album
+	}
+	if req.Genre != nil {
+		existing.Genre = *req.Genre
+	}
+	if req.DurationSeconds != nil {
+		existing.DurationSeconds = *req.DurationSeconds
+	}
+	if req.ReleaseDate != nil {
+		// Parse the string date into time.Time
+		parsedDate, err := time.Parse(time.RFC3339, *req.ReleaseDate)
+		if err != nil {
+			return model.Song{}, fmt.Errorf("invalid release date format: %w", err)
+		}
+		existing.ReleaseDate = parsedDate
+	}
+
+	// 3. Save to repository
+	if err := s.repo.Update(ctx, &existing); err != nil {
+		logger.Error().Err(err).Msg("failed to update song in repository")
+		return model.Song{}, fmt.Errorf("failed to update song: %w", err)
+	}
+
+	// 4. Invalidate cache
+	if err := s.cache.Delete(ctx, req.ID); err != nil {
+		logger.Warn().Err(err).Msg("failed to invalidate cache after update")
+	}
+
+	logger.Info().Msg("song updated successfully")
+	return existing, nil
 }
 
 // Delete deletes a song by ID
