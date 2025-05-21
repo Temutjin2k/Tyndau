@@ -22,4 +22,5 @@ type Producer interface {
 
 type TokenService interface {
 	NewToken(user model.User, duration time.Duration) (string, error)
+	ValidateToken(token string) (bool, error)
 }

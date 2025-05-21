@@ -1,12 +1,13 @@
 package nats
 
 import (
+	"context"
 	"encoding/json" // Импортируем json
 	"fmt"
 	"log"
-	"time"
 	"os"
-	"context"
+	"time"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
@@ -64,71 +65,71 @@ func NewConsumer(handler model.EventProcessor) (*Consumer, error) {
 }
 
 func (c *Consumer) SubscribeToEvents(ctx context.Context) error {
-    consumerPrefix := os.Getenv("NATS_CONSUMER_PREFIX")
-    if consumerPrefix == "" {
-        consumerPrefix = "tyndau_consumer"
-    }
+	consumerPrefix := os.Getenv("NATS_CONSUMER_PREFIX")
+	if consumerPrefix == "" {
+		consumerPrefix = "tyndau_consumer"
+	}
 
-    // Используем строковые значения, а не константы
-    subjects := map[string]string{
-        "user_registered":  "user.registered",
-        "album_released":   "music.album_released",
-    }
+	// Используем строковые значения, а не константы
+	subjects := map[string]string{
+		"user_registered": "user.registered",
+		"album_released":  "music.album_released",
+	}
 
-    for subject, eventType := range subjects {
-        fullSubject := fmt.Sprintf("%s.%s", c.stream, subject)
-        consumerName := fmt.Sprintf("%s_%s", consumerPrefix, subject)
+	for subject, eventType := range subjects {
+		fullSubject := fmt.Sprintf("%s.%s", c.stream, subject)
+		consumerName := fmt.Sprintf("%s_%s", consumerPrefix, subject)
 
-        log.Printf("Setting up consumer for subject: %s (eventType: %s)", fullSubject, eventType)
+		log.Printf("Setting up consumer for subject: %s (eventType: %s)", fullSubject, eventType)
 
-        consumerConfig := jetstream.ConsumerConfig{
-            Durable:       consumerName,
-            AckPolicy:     jetstream.AckExplicitPolicy,
-            MaxDeliver:    3,
-            AckWait:       30 * time.Second,
-            FilterSubject: fullSubject,
-        }
+		consumerConfig := jetstream.ConsumerConfig{
+			Durable:       consumerName,
+			AckPolicy:     jetstream.AckExplicitPolicy,
+			MaxDeliver:    3,
+			AckWait:       30 * time.Second,
+			FilterSubject: fullSubject,
+		}
 
-        consumer, err := c.js.CreateOrUpdateConsumer(ctx, c.stream, consumerConfig)
-        if err != nil {
-            return fmt.Errorf("failed to create consumer for %s: %w", subject, err)
-        }
+		consumer, err := c.js.CreateOrUpdateConsumer(ctx, c.stream, consumerConfig)
+		if err != nil {
+			return fmt.Errorf("failed to create consumer for %s: %w", subject, err)
+		}
 
-        _, err = consumer.Consume(func(msg jetstream.Msg) {
-            log.Printf("📥 Received message on subject: %s", msg.Subject())
-            log.Printf("📦 Message data: %s", string(msg.Data()))
+		_, err = consumer.Consume(func(msg jetstream.Msg) {
+			log.Printf("📥 Received message on subject: %s", msg.Subject())
+			log.Printf("📦 Message data: %s", string(msg.Data()))
 
-            var event model.Event
-            if err := json.Unmarshal(msg.Data(), &event); err != nil {
-                log.Printf("❌ Failed to unmarshal event: %v", err)
-                return
-            }
+			var event model.Event
+			if err := json.Unmarshal(msg.Data(), &event); err != nil {
+				log.Printf("❌ Failed to unmarshal event: %v", err)
+				return
+			}
 
-            var processErr error
-            switch event.Type {
-            case "user.registered": // Используем строку для типа события
-                processErr = c.handler.ProcessUserRegistered(msg.Data())
-            case "music.album_released": // Используем строку для типа события
-                processErr = c.handler.ProcessAlbumReleased(msg.Data())
-            default:
-                log.Printf("⚠️ Unknown event type: %s", event.Type)
-            }
+			var processErr error
+			switch event.Type {
+			case "user.registered": // Используем строку для типа события
+				processErr = c.handler.ProcessUserRegistered(msg.Data())
+			case "music.album_released": // Используем строку для типа события
+				processErr = c.handler.ProcessAlbumReleased(msg.Data())
+			default:
+				log.Printf("⚠️ Unknown event type: %s", event.Type)
+			}
 
-            if processErr != nil {
-                log.Printf("❌ Error processing %s: %v", event.Type, processErr)
-            }
+			if processErr != nil {
+				log.Printf("❌ Error processing %s: %v", event.Type, processErr)
+			}
 
-            if err := msg.Ack(); err != nil {
-                log.Printf("❌ Failed to ACK message: %v", err)
-            }
-        })
+			if err := msg.Ack(); err != nil {
+				log.Printf("❌ Failed to ACK message: %v", err)
+			}
+		})
 
-        if err != nil {
-            return fmt.Errorf("failed to consume from subject %s: %w", subject, err)
-        }
+		if err != nil {
+			return fmt.Errorf("failed to consume from subject %s: %w", subject, err)
+		}
 
-        log.Printf("✅ Subscribed to %s (%s)", fullSubject, eventType)
-    }
+		log.Printf("✅ Subscribed to %s (%s)", fullSubject, eventType)
+	}
 
-    return nil
+	return nil
 }

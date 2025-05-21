@@ -81,7 +81,7 @@ func (u *AuthUseCase) Login(ctx context.Context, user model.User) (model.Token, 
 		return model.Token{}, err
 	}
 
-	token, err := u.tokenProvider.NewToken(user, time.Hour*24)
+	token, err := u.tokenProvider.NewToken(user, time.Second*5)
 	if err != nil {
 		return model.Token{}, errors.New("failed to create tokeen")
 	}
@@ -91,10 +91,16 @@ func (u *AuthUseCase) Login(ctx context.Context, user model.User) (model.Token, 
 	}, nil
 }
 
-func (u *AuthUseCase) Logout(ctx context.Context, token string) error {
-	panic("implement me")
-}
+func (u *AuthUseCase) ValidateToken(ctx context.Context, token string) (bool, error) {
+	if token == "" {
+		return false, errors.New("empty token provided")
+	}
 
-func (u *AuthUseCase) IsAdmin(ctx context.Context, id int64) (bool, error) {
-	panic("implement me")
+	valid, err := u.tokenProvider.ValidateToken(token)
+	if err != nil {
+		u.logger.Error().Err(err).Msg("token validation failed")
+		return false, ErrInvalidCredentials
+	}
+
+	return valid, nil
 }

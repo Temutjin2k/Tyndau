@@ -7,8 +7,6 @@ import (
 	"github.com/Temutjin2k/Tyndau/auth_service/internal/model"
 	authpb "github.com/Temutjin2k/TyndauProto/gen/go/auth"
 	"github.com/rs/zerolog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type AuthServer struct {
@@ -58,26 +56,12 @@ func (h *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*auth
 	}, nil
 }
 
-func (h *AuthServer) IsAdmin(ctx context.Context, req *authpb.IsAdminRequest) (*authpb.IsAdminResponse, error) {
-	userID := req.GetUserId()
-
-	isAdmin, err := h.uc.IsAdmin(ctx, userID)
+func (h *AuthServer) ValidateToken(ctx context.Context, req *authpb.ValidateTokenRequest) (*authpb.ValidateTokenResponce, error) {
+	ok, err := h.uc.ValidateToken(ctx, req.GetToken())
 	if err != nil {
-		h.log.Error().Err(err).Msg("Failed to check for admin")
 		return nil, err
 	}
-
-	return &authpb.IsAdminResponse{
-		IsAdmin: isAdmin,
+	return &authpb.ValidateTokenResponce{
+		Succeess: ok,
 	}, nil
-}
-
-func (h *AuthServer) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
-	err := h.uc.Logout(ctx, req.GetToken())
-	if err != nil {
-		h.log.Error().Err(err).Msg("Logout failed")
-		return nil, status.Errorf(codes.Internal, "logout failed: %v", err)
-	}
-
-	return &authpb.LogoutResponse{Success: true}, nil
 }
