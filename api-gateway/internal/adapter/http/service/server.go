@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/Temutjin2k/Tyndau/api-gateway/config"
+	m "github.com/Temutjin2k/Tyndau/api-gateway/internal/adapter/http/service/middleware"
 	authProto "github.com/Temutjin2k/TyndauProto/gen/go/auth"
+	musicProto "github.com/Temutjin2k/TyndauProto/gen/go/music"
 	userProto "github.com/Temutjin2k/TyndauProto/gen/go/user"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/zerolog"
@@ -43,12 +45,16 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 	// Healthcheck
 	mux.HandleFunc("/healthcheck", api.HealthCheck)
 
+	// Static files
+	fs := http.FileServer(http.Dir("./web"))
+	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	// gRPC-Gateway mux
 	mux.Handle("/", grpcMux)
 
 	api.server = &http.Server{
 		Addr:           api.addr,
-		Handler:        mux,
+		Handler:        m.LoggingMiddleware(m.CorsMiddleware(mux), logger),
 		ReadTimeout:    cfg.Server.HTTPServer.ReadTimeout,
 		WriteTimeout:   cfg.Server.HTTPServer.WriteTimeout,
 		IdleTimeout:    cfg.Server.HTTPServer.IdleTimeout,
@@ -60,20 +66,29 @@ func NewAPI(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*A
 
 // Setup all routes
 func (a *API) setupGRPCRoutes(ctx context.Context, mux *runtime.ServeMux) error {
-	a.logger.Debug().Str("user gRPC address", a.cfg.Server.UserGRPCServers.Addr).Msg("Trying to register user gRPC service")
-	err := a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.UserGRPCServers.Addr, userProto.RegisterUserHandler)
-	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to register user gRPC server")
-		return err
-	}
 
 	a.logger.Debug().Str("auth gRPC address", a.cfg.Server.AuthGRPCServer.Addr).Msg("Trying to register auth gRPC service")
-	err = a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.AuthGRPCServer.Addr, authProto.RegisterAuthHandler)
+	err := a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.AuthGRPCServer.Addr, authProto.RegisterAuthHandler)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to register auth gRPC server")
 		return err
 	}
 
+	a.logger.Debug().Str("user gRPC address", a.cfg.Server.UserGRPCServers.Addr).Msg("Trying to register user gRPC service")
+	err = a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.UserGRPCServers.Addr, userProto.RegisterUserHandler)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to register user gRPC server")
+		return err
+	}
+
+	a.logger.Debug().Str("music gRPC address", a.cfg.Server.MusicGRPCServer.Addr).Msg("Trying to register music gRPC service")
+	err = a.RegisterGRPCHandler(ctx, mux, a.cfg.Server.MusicGRPCServer.Addr, musicProto.RegisterMusicHandler)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to register music gRPC server")
+		return err
+	}
+
+	a.logger.Debug().Msg("All grpc services registered")
 	return nil
 }
 

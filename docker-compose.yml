@@ -8,11 +8,14 @@ services:
     env_file:
       - ./api-gateway/.env
     ports:
-      - "8080:8080" 
+      - "8080:8080"
     depends_on:
       - auth_service
       - user_service
       - notification-service
+      - postgres
+      - redis
+      - nats
     networks:
       - app-network
 
@@ -22,6 +25,10 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./auth_service/.env
+    depends_on:
+      - postgres
+      - redis
+      - nats
     networks:
       - app-network
 
@@ -31,6 +38,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./notification-service/.env
+    depends_on:
+      - nats
     networks:
       - app-network
 
@@ -40,10 +49,47 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./user_service/.env
+    depends_on:
+      - postgres
+      - redis
     networks:
       - app-network
-      
-  # Nats    
+
+  music-service:
+    build:
+      context: ./music-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./music-service/.env
+    depends_on:
+      - postgres
+      - redis
+      - nats
+    networks:
+      - app-network
+
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./music-service/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 20s
+      timeout: 15s
+      retries: 5
+    networks:
+      - app-network
+
+  # Message Broker
   nats:
     image: nats:latest
     ports:
@@ -55,6 +101,67 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  # Cache
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USER=${REDIS_USER}
+      - REDIS_USER_PASSWORD=${REDIS_USER_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    command: >
+      sh -c '
+        mkdir -p /usr/local/etc/redis &&
+        echo "bind 0.0.0.0" > /usr/local/etc/redis/redis.conf &&
+        echo "requirepass $$REDIS_PASSWORD" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendonly yes" >> /usr/local/etc/redis/redis.conf &&
+        echo "appendfsync everysec" >> /usr/local/etc/redis/redis.conf &&
+        echo "user default on nopass ~* +@all" > /usr/local/etc/redis/users.acl &&
+        echo "user $$REDIS_USER on >$$REDIS_USER_PASSWORD ~* +@all" >> /usr/local/etc/redis/users.acl &&
+        redis-server /usr/local/etc/redis/redis.conf --aclfile /usr/local/etc/redis/users.acl
+      '
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$REDIS_PASSWORD", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: always
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web UI
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+volumes:
+  postgres_data:
+  redisdata:
+  minio-data:
 
 networks:
   app-network:
