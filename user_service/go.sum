@@ -4,6 +4,8 @@ github.com/Temutjin2k/TyndauProto v0.0.11 h1:yHDNbo1iswbOMClbw4VdG6FcToxEuH2CjqZ
 github.com/Temutjin2k/TyndauProto v0.0.11/go.mod h1:NEa0hOSh8NgViZI/Ip5jRn5576npiVckBC6V9AVeD4w=
 github.com/Temutjin2k/TyndauProto v0.0.12 h1:I8RYlrTOfLSbkeUUgr0JSYJDByLwknIRdMugrRtJsGk=
 github.com/Temutjin2k/TyndauProto v0.0.12/go.mod h1:NEa0hOSh8NgViZI/Ip5jRn5576npiVckBC6V9AVeD4w=
+github.com/Temutjin2k/TyndauProto v0.1.1 h1:Fk5rndyzttxWIGqmqXiA1AhF1VO27+hh8oBPfUQ+dkU=
+github.com/Temutjin2k/TyndauProto v0.1.1/go.mod h1:NEa0hOSh8NgViZI/Ip5jRn5576npiVckBC6V9AVeD4w=
 github.com/caarlos0/env/v10 v10.0.0 h1:yIHUBZGsyqCnpTkbjk8asUlx6RFhhEs+h7TOBdgdzXA=
 github.com/caarlos0/env/v10 v10.0.0/go.mod h1:ZfulV76NvVPw3tm591U4SwL3Xx9ldzBP9aGxzeN7G18=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=
