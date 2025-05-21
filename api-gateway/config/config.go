@@ -57,16 +57,14 @@ func New() (*Config, error) {
 	var cfg Config
 
 	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
-		return nil, fmt.Errorf("error loading .env file: %w", err)
-	}
+	godotenv.Load()
 
 	// Parse environment variables into the Config structure
-	err = env.Parse(&cfg)
+	err := env.Parse(&cfg)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing environment variables: %w", err)
 	}
 
+	PrintConfig(cfg)
 	return &cfg, nil
 }

@@ -10,12 +10,9 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - music-service 
       - auth_service
       - user_service
-      - notification-service
-      - postgres
-      - redis
-      - nats
     networks:
       - app-network
 
@@ -26,8 +23,6 @@ services:
     env_file:
       - ./auth_service/.env
     depends_on:
-      - postgres
-      - redis
       - nats
     networks:
       - app-network
@@ -65,6 +60,7 @@ services:
       - postgres
       - redis
       - nats
+      - minio
     networks:
       - app-network
 
@@ -80,7 +76,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./music-service/migrations:/docker-entrypoint-initdb.d
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 20s
