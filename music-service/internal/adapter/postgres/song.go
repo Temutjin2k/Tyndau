@@ -28,6 +28,9 @@ func (r *SongRepository) Create(ctx context.Context, in *model.Song) (*model.Son
 		RETURNING id, created_at, updated_at
 	`
 
+	ctx, cancel := context.WithTimeout(ctx, time.Second*1)
+	defer cancel()
+
 	err := r.db.QueryRow(
 		ctx, q,
 		in.Title,

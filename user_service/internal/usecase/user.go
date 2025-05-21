@@ -8,6 +8,11 @@ import (
 	"github.com/Temutjin2k/Tyndau/user_service/pkg/def"
 	"github.com/Temutjin2k/Tyndau/user_service/pkg/validator"
 	"github.com/rs/zerolog"
+	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
 type UserUseCase struct {
@@ -103,6 +108,22 @@ func (s *UserUseCase) GetProfile(ctx context.Context, id int64) (model.User, err
 	user, err := s.userRepo.GetByID(ctx, id)
 	if err != nil {
 		return model.User{}, model.ErrNotFound
+	}
+
+	return user, nil
+}
+
+func (s *UserUseCase) GetProfileByEmail(ctx context.Context, email, password string) (model.User, error) {
+	log := s.log.With().Str("email", email).Logger()
+
+	user, err := s.userRepo.GetProfile(ctx, email)
+	if err != nil {
+		return model.User{}, model.ErrNotFound
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		log.Error().Err(err).Msg("invalid credentials")
+		return model.User{}, ErrInvalidCredentials
 	}
 
 	return user, nil

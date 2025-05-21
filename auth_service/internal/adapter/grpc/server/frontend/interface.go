@@ -10,5 +10,5 @@ type AuthUseCase interface {
 	Register(ctx context.Context, user model.User) (model.User, error)
 	Login(ctx context.Context, user model.User) (model.Token, error)
 	Logout(ctx context.Context, token string) error
-	IsAdmin(ctx context.Context, id int64) bool
+	IsAdmin(ctx context.Context, id int64) (bool, error)
 }

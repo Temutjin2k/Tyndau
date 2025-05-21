@@ -2,23 +2,31 @@ package usecase
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/Temutjin2k/Tyndau/auth_service/internal/model"
 	"github.com/Temutjin2k/Tyndau/auth_service/pkg/validator"
 	"github.com/rs/zerolog"
 )
 
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+)
+
 type AuthUseCase struct {
-	userProvider UserService
-	mailProvider MailService
+	userProvider  UserService
+	mailProvider  MailService
+	tokenProvider TokenService
 
 	logger *zerolog.Logger
 }
 
-func NewAuth(userProvider UserService, mailProvider MailService, logger *zerolog.Logger) *AuthUseCase {
+func NewAuth(userProvider UserService, mailProvider MailService, tokenService TokenService, logger *zerolog.Logger) *AuthUseCase {
 	return &AuthUseCase{
-		userProvider: userProvider,
-		mailProvider: mailProvider,
+		userProvider:  userProvider,
+		mailProvider:  mailProvider,
+		tokenProvider: tokenService,
 
 		logger: logger,
 	}
@@ -53,13 +61,40 @@ func (u *AuthUseCase) Register(ctx context.Context, user model.User) (model.User
 }
 
 func (u *AuthUseCase) Login(ctx context.Context, user model.User) (model.Token, error) {
-	panic("implement me")
+	log := u.logger.With().Str("email", user.Email).Logger()
+	log.Info().Msg("attempting to login user")
+
+	//Validation
+	v := validator.New()
+
+	v.Check(user.Email != "", "email", "must be provided")
+	v.Check(user.Password != "", "password", "must be provided")
+
+	if ok := v.Valid(); !ok {
+		log.Error().Err(v).Msg("failed validation")
+		return model.Token{}, v
+	}
+
+	user, err := u.userProvider.User(ctx, user.Email, user.Password)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get user")
+		return model.Token{}, err
+	}
+
+	token, err := u.tokenProvider.NewToken(user, time.Hour*24)
+	if err != nil {
+		return model.Token{}, errors.New("failed to create tokeen")
+	}
+
+	return model.Token{
+		Token: token,
+	}, nil
 }
 
 func (u *AuthUseCase) Logout(ctx context.Context, token string) error {
 	panic("implement me")
 }
 
-func (u *AuthUseCase) IsAdmin(ctx context.Context, id int64) bool {
+func (u *AuthUseCase) IsAdmin(ctx context.Context, id int64) (bool, error) {
 	panic("implement me")
 }

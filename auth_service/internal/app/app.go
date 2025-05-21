@@ -46,7 +46,10 @@ func New(ctx context.Context, cfg *config.Config, logger *zerolog.Logger) (*App,
 	// Mail Provider
 	mailProvider := usecase.NewMail(natsProducer)
 
-	authUseCase := usecase.NewAuth(userProvider, mailProvider, logger)
+	// Token service (JWT)
+	tokenService := usecase.NewJwtManager(cfg.JWT.Secret)
+
+	authUseCase := usecase.NewAuth(userProvider, mailProvider, tokenService, logger)
 
 	grpcServer := grpcserver.New(cfg.Server.GRPCServer, logger, authUseCase)
 

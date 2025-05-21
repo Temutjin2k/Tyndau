@@ -36,6 +36,25 @@ func (u *UserGRPCHandler) Create(ctx context.Context, req *userpb.CreateRequest)
 	}, nil
 }
 
+func (u *UserGRPCHandler) ProfileByEmail(ctx context.Context, req *userpb.ProfileByEmailRequest) (*userpb.ProfileResponse, error) {
+	// Validate email
+	if req.Email == "" {
+		return nil, status.Error(codes.InvalidArgument, "email is required")
+	}
+
+	// Validate password (if this is a login flow)
+	if req.PlainPassword == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	user, err := u.uc.GetProfileByEmail(ctx, req.Email, req.PlainPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	return dto.ToProfileResponce(user), nil
+}
+
 func (u *UserGRPCHandler) Profile(ctx context.Context, req *userpb.ProfileRequest) (*userpb.ProfileResponse, error) {
 	if req.UserId < 1 {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("wrong ID: %d", req.UserId))
