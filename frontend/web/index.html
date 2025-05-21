@@ -81,7 +81,7 @@
                 <div id="popular-songs" class="popular-songs"></div>
             </div>
 
-            <div id="resultsSection" class="hidden">
+            <div id="resultsSection" style="display:none;">
                 <h2>Search Results</h2>
                 <div id="results"></div>
             </div>
@@ -90,7 +90,7 @@
         <div class="additional-info">
             <div class="player">
                 <div class="now-playing">
-                    <img src="/images/cover.jpg" alt="Track Cover" class="cover" id="cover-preview">
+                    <img src="/images/music.png" alt="Track Cover" class="cover" id="cover-preview">
                     <div class="track-info">
                         <p class="track-title" id="track-title">Your Song</p>
                         <p class="track-artist" id="track-artist">Unknown Artist</p>
@@ -115,20 +115,35 @@
                 </div>
             </div>
 
-            <button onclick="showUploadForm()">Choose File</button>
-            <button onclick="upload()">Upload</button>
+            <div class="upload-buttons">
+                <button type="button" onclick="openModal()">Choose File</button>
+                <button type="button" onclick="upload()">Upload</button>
+            </div>
 
-            <div id="uploadForm" class="modal hidden">
+            <div id="uploadModal" class="modal">
                 <div class="modal-content">
-                    <h3>Upload Song Metadata</h3>
-                    <label>Title: <input type="text" id="title"></label>
-                    <label>Artist: <input type="text" id="artist"></label>
-                    <label>Album: <input type="text" id="album"></label>
-                    <label>Genre: <input type="text" id="genre"></label>
-                    <label>Duration (sec): <input type="number" id="duration" value="180"></label>
-                    <label>Release Date: <input type="date" id="releaseDate" value="2025-01-01"></label>
-                    <label>Select File: <input type="file" id="fileInput" accept="audio/*"></label>
-                    <button onclick="hideUploadForm()">Save</button>
+                    <div class="modal-header">
+                        <h2>Upload Song Metadata</h2>
+                        <button class="close-btn" onclick="closeModal()">
+                            <img src="../images/close.png" alt="Close" />
+                        </button>
+
+                    </div>
+                    <label>Title:</label>
+                    <input type="text" id="metaTitle" />
+                    <label>Artist:</label>
+                    <input type="text" id="metaArtist" />
+                    <label>Album:</label>
+                    <input type="text" id="metaAlbum" />
+                    <label>Genre:</label>
+                    <input type="text" id="metaGenre" />
+                    <label>Duration (sec):</label>
+                    <input type="number" id="metaDuration" value="180" />
+                    <label>Release Date:</label>
+                    <input type="date" id="metaDate" />
+                    <label>Select File:</label>
+                    <input type="file" id="metaFile" />
+                    <button class="modal-upload-btn" onclick="saveMetadata()">Save</button>
                 </div>
             </div>
         </div>
@@ -224,6 +239,14 @@
                 console.error('Fetch songs failed:', err);
                 container.innerHTML = '<p>Failed to load songs.</p>';
             }
+        }
+
+        function openModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').style.display = 'none';
         }
 
         // Initial load
