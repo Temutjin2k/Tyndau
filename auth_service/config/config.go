@@ -41,12 +41,12 @@ type (
 func New() (*Config, error) {
 	var cfg Config
 
-	err := godotenv.Load()
-	if err != nil {
-		return &cfg, err
-	}
+	// Load environment variables from .env file
+	godotenv.Load()
 
-	err = env.Parse(&cfg)
+	// Parse environment variables into the Config structure
+	err := env.Parse(&cfg)
 
+	PrintConfig(cfg)
 	return &cfg, err
 }

@@ -29,10 +29,8 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	config := &Config{}
 
-	err := godotenv.Load()
-	if err != nil {
-		return config, err
-	}
+	// Load environment variables from .env file
+	godotenv.Load()
 
 	// NATS configuration
 	config.NatsURL = getEnvString("NATS_URL", "nats://localhost:4222")
@@ -52,6 +50,7 @@ func LoadConfig() (*Config, error) {
 	// Templates configuration
 	config.TemplatesDir = getEnvString("TEMPLATES_DIR", "./templates")
 
+	PrintConfig(config)
 	return config, nil
 }
 
