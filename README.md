@@ -42,6 +42,28 @@ Tyndau/
 └── Makefile
 ```
 
+## Getting Started
+
+1. Clone the repository
+   
+```bash
+git clone --branch final --single-branch https://github.com/Temutjin2k/Tyndau.git
+cd Tyndau
+```
+
+2. Create a .env file in each service directory (if applicable) based on provided .env.example files. Set up environment variables such as ports, database URLs, secret keys, etc.
+
+3. Run all services
+
+```bash
+docker-compose up --build
+```
+
+This will build and start all microservices and the frontend.
 
 ### Proto Contracts
 https://github.com/Temutjin2k/TyndauProto
+
+### Students (SE-2308 group)
+Merey Ibraim, Temutjin Koszhanov, Beibars Yergali
+
