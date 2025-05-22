@@ -45,7 +45,8 @@
                     <div class="banner-text">
                         <h2>Upload and listen to your music!</h2>
                         <h1>Enjoy</h1>
-                        <div class="banner-btn">
+                        <!-- Added id so we can attach a click listener -->
+                        <div class="banner-btn" id="listenNowBtn">
                             <img src="/images/play-buttton.png" alt="Play">
                             <p>Listen Now</p>
                         </div> 
@@ -81,7 +82,7 @@
                 <div id="popular-songs" class="popular-songs"></div>
             </div>
 
-            <div id="resultsSection" style="display:none;">
+<div id="resultsSection" style="display:none;">
                 <h2>Search Results</h2>
                 <div id="results"></div>
             </div>
@@ -151,8 +152,26 @@
     
     <script>
         const audioPlayer = document.getElementById('audio-player');
+        const audioSource = document.getElementById('audio-source');
+        const coverPreview = document.getElementById('cover-preview');
+        const trackTitleEl = document.getElementById('track-title');
+        const trackArtistEl = document.getElementById('track-artist');
         
-        function skipBack() {
+        // Keep track of the songs fetched from the backend
+        let songsList = [];
+
+        // Replace now‑playing section with the chosen song
+        function setCurrentSong(song) {
+            if (!song) return;
+            audioSource.src = song.fileUrl;
+            audioPlayer.load();
+            audioPlayer.play();
+            coverPreview.src = song.coverUrl || '/images/music.png';
+            trackTitleEl.textContent = song.title || 'Unknown title';
+            trackArtistEl.textContent = song.artist || 'Unknown artist';
+        }
+
+function skipBack() {
             audioPlayer.currentTime -= 10;
         }
         
@@ -224,8 +243,11 @@
                 
                 if (!data.songs || !data.songs.length) {
                     container.innerHTML = '<p>No songs found.</p>';
+                    songsList = [];
                     return;
                 }
+
+                songsList = data.songs; // store for random playback
 
                 container.innerHTML = data.songs.map(song => `
                     <div class="song-card">
@@ -238,6 +260,7 @@
             } catch (err) {
                 console.error('Fetch songs failed:', err);
                 container.innerHTML = '<p>Failed to load songs.</p>';
+                songsList = [];
             }
         }
 
@@ -249,9 +272,22 @@
             document.getElementById('uploadModal').style.display = 'none';
         }
 
+// Random song playback when "Listen Now" is clicked
+        function playRandomSong() {
+            if (!songsList.length) {
+                alert('No songs available yet.');
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * songsList.length);
+            const randomSong = songsList[randomIndex];
+            setCurrentSong(randomSong);
+        }
+
         // Initial load
         document.addEventListener('DOMContentLoaded', () => {
             fetchSongs();
+            const listenBtn = document.getElementById('listenNowBtn');
+            if (listenBtn) listenBtn.addEventListener('click', playRandomSong);
         });
 
 
