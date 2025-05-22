@@ -229,7 +229,7 @@
 
                 container.innerHTML = data.songs.map(song => `
                     <div class="song-card">
-                        <img src="${song.coverUrl || '/images/default-cover.jpg'}" alt="Cover">
+                        <img src="${song.coverUrl || '/images/music.png'}" alt="Cover">
                         <div class="title">${song.title}</div>
                         <div class="artist">${song.artist}</div>
                         <audio controls src="${song.fileUrl}" style="width: 100%; margin-top: 8px;"></audio>
@@ -253,6 +253,68 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchSongs();
         });
+
+
+        async function saveMetadata() {
+        const title = document.getElementById('metaTitle').value || 'Untitled';
+        const artist = document.getElementById('metaArtist').value || 'Unknown Artist';
+        const album = document.getElementById('metaAlbum').value || 'Unknown Album';
+        const genre = document.getElementById('metaGenre').value || 'Unknown Genre';
+        const duration = parseInt(document.getElementById('metaDuration').value) || 180;
+        const releaseDate = document.getElementById('metaDate').value || '2025-01-01';
+        const fileInput = document.getElementById('metaFile');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a file.');
+            return;
+        }
+
+        const metadata = {
+            title: title,
+            artist: artist,
+            album: album,
+            genre: genre,
+            duration_seconds: duration,
+            release_date: releaseDate,
+            filename: file.name
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/v1/music/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(metadata)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to get upload URL');
+            }
+
+            const uploadResponse = await fetch(data.uploadUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': file.type
+                },
+                body: file
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('File upload failed');
+            }
+
+            alert('Song uploaded successfully!');
+            closeModal();
+            fetchSongs();
+        } catch (error) {
+            console.error('Error during metadata save/upload:', error);
+            alert('Error: ' + error.message);
+        }
+    }
     </script>
 </body>
 </html>
