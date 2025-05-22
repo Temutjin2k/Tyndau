@@ -1,101 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Song Uploader</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .song-item { margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-    audio { width: 100%; margin-top: 5px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link rel="stylesheet" href="/public/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
 </head>
+
 <body>
-  <h1>🎵 Upload a Song</h1>
-  <input type="file" id="fileInput" />
-  <button onclick="upload()">Upload</button>
+    <div class="content">
+        <div class="sidebar">
+            <div class="profile">
+                <img src="/images/profile.jpg" alt="Profile Picture" class="profile-pic">
+                <div class="profile-info">
+                    <p class="profile-name">Min</p>
+                    <p class="profile-status">Listener</p>
+                </div>
+            </div>
+            <ul>
+                <li id="back-to-main">Main</li>
+                <li>Radio</li>
+                <li>Podcasts</li>
+                <li>Books</li>
+            </ul>
+            <ul>
+                <p>My music</p>
+                <li>Tracks</li>
+                <li>Albums</li>
+                <li>Artists</li>
+                <li>Playlists</li>
+            </ul>
+        </div>
+        <div class="main">
+            <div class="main-content">
+                <div class="search-container" id="search-container"> 
+                    <img src="/images/magnifying-glass.png" class="search-icon" alt="Search"> 
+                    <input type="text" class="search-input" id="search-input" placeholder="Search">
+                </div>
+                <h1>Music Service of Dream Team</h1>
+                <div class="banner">
+                    <div class="banner-text">
+                        <h2>Upload and listen to your music!</h2>
+                        <h1>Enjoy</h1>
+                        <!-- Added id so we can attach a click listener -->
+                        <div class="banner-btn" id="listenNowBtn">
+                            <img src="/images/play-buttton.png" alt="Play">
+                            <p>Listen Now</p>
+                        </div> 
+                    </div>
+                    <div class="banner-image">
+                        <img src="/images/sticker.webp" alt="Banner">
+                    </div>
+                </div>
+                <h2 class="playlist-text">Playlists for you</h2>
+                <div class="playlists-place">
+                    <div class="playlist-box">
+                        <a href="#">
+                            <img src="/images/cat.png" alt="Playlist 1">
+                        </a>
+                    </div>
+                    <div class="playlist-box">
+                        <a href="#">
+                            <img src="/images/smth.png" alt="Playlist 2">
+                        </a>
+                    </div>
+                    <div class="playlist-box">
+                        <a href="#">
+                            <img src="/images/akula.png" alt="Playlist 3">
+                        </a>
+                    </div>
+                    <div class="playlist-box">
+                        <a href="#">
+                            <img src="/images/smth2.png" alt="Playlist 4">
+                        </a>
+                    </div>
+                </div>
+                <h2 class="playlist-text">Your uploaded list of music!</h2>
+                <div id="popular-songs" class="popular-songs"></div>
+            </div>
 
-  <h2>🎶 All Songs</h2>
-  <div id="songsContainer">Loading...</div>
+<div id="resultsSection" style="display:none;">
+                <h2>Search Results</h2>
+                <div id="results"></div>
+            </div>
+        </div>
+        
+        <div class="additional-info">
+            <div class="player">
+                <div class="now-playing">
+                    <img src="/images/music.png" alt="Track Cover" class="cover" id="cover-preview">
+                    <div class="track-info">
+                        <p class="track-title" id="track-title">Your Song</p>
+                        <p class="track-artist" id="track-artist">Unknown Artist</p>
+                    </div>
+                </div>
 
-  <script>
-    async function upload() {
-      const fileInput = document.getElementById('fileInput');
-      const file = fileInput.files[0];
-      if (!file) return alert('Choose a file');
+                <audio controls class="audio-player" id="audio-player">
+                    <source id="audio-source" src="" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
 
-      const metadata = {
-        filename: file.name,
-        title: file.name.split('.')[0],
-        artist: 'Unknown Artist',
-        album: 'Unknown Album',
-        genre: 'Unknown Genre',
-        durationSeconds: 180,
-        releaseDate: '2025-01-01'
-      };
+                <div class="player-controls">
+                    <button class="icon-button" onclick="skipBack()">
+                        <img src="/images/back.png" alt="Back 10s">
+                    </button>
+                    <button class="icon-button" onclick="togglePlay()">
+                        <img src="/images/play-buttton.png" alt="Play/Pause">
+                    </button>
+                    <button class="icon-button" onclick="skipForward()">
+                        <img src="/images/back-2.png" alt="Forward 10s">
+                    </button>
+                </div>
+            </div>
 
-      const res = await fetch('http://localhost:8080/v1/music/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(metadata)
-      });
+            <div class="upload-buttons">
+                <button type="button" onclick="openModal()">Choose File</button>
+                <button type="button" onclick="upload()">Upload</button>
+            </div>
 
-      const data = await res.json();
-      if (!res.ok) {
-        console.error('Presigned URL error:', data);
-        return alert('Failed to get upload URL');
-      }
+            <div id="uploadModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Upload Song Metadata</h2>
+                        <button class="close-btn" onclick="closeModal()">
+                            <img src="../images/close.png" alt="Close" />
+                        </button>
 
-      const { uploadUrl, fileUrl } = data;
+                    </div>
+                    <label>Title:</label>
+                    <input type="text" id="metaTitle" />
+                    <label>Artist:</label>
+                    <input type="text" id="metaArtist" />
+                    <label>Album:</label>
+                    <input type="text" id="metaAlbum" />
+                    <label>Genre:</label>
+                    <input type="text" id="metaGenre" />
+                    <label>Duration (sec):</label>
+                    <input type="number" id="metaDuration" value="180" />
+                    <label>Release Date:</label>
+                    <input type="date" id="metaDate" />
+                    <label>Select File:</label>
+                    <input type="file" id="metaFile" />
+                    <button class="modal-upload-btn" onclick="saveMetadata()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const audioPlayer = document.getElementById('audio-player');
+        const audioSource = document.getElementById('audio-source');
+        const coverPreview = document.getElementById('cover-preview');
+        const trackTitleEl = document.getElementById('track-title');
+        const trackArtistEl = document.getElementById('track-artist');
+        
+        // Keep track of the songs fetched from the backend
+        let songsList = [];
 
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type }
-      });
-
-      if (!uploadRes.ok) {
-        const text = await uploadRes.text();
-        console.error('MinIO upload failed:', text);
-        return alert('Upload failed');
-      }
-
-      alert('Upload successful!');
-      await fetchSongs(); // Reload songs after upload
-    }
-
-    async function fetchSongs() {
-      const container = document.getElementById('songsContainer');
-      container.innerHTML = 'Loading...';
-
-      try {
-        const res = await fetch('http://localhost:8080/v1/music/search');
-        const data = await res.json();
-        const songs = data.songs;
-
-        if (!songs.length) {
-          container.innerHTML = 'No songs found.';
-          return;
+        // Replace now‑playing section with the chosen song
+        function setCurrentSong(song) {
+            if (!song) return;
+            audioSource.src = song.fileUrl;
+            audioPlayer.load();
+            audioPlayer.play();
+            coverPreview.src = song.coverUrl || '/images/music.png';
+            trackTitleEl.textContent = song.title || 'Unknown title';
+            trackArtistEl.textContent = song.artist || 'Unknown artist';
         }
 
-        container.innerHTML = '';
-        songs.forEach(song => {
-          const div = document.createElement('div');
-          div.className = 'song-item';
-          div.innerHTML = `
-            <strong>${song.title}</strong> by ${song.artist}<br/>
-            Album: ${song.album} | Genre: ${song.genre} | Released: ${song.releaseDate}<br/>
-            <audio controls src="${song.fileUrl}"></audio>
-          `;
-          container.appendChild(div);
-        });
-      } catch (err) {
-        console.error('Fetch songs failed:', err);
-        container.innerHTML = 'Failed to load songs.';
-      }
-    }
+function skipBack() {
+            audioPlayer.currentTime -= 10;
+        }
+        
+        function togglePlay() {
+            audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
+        }
+        
+        function skipForward() {
+            audioPlayer.currentTime += 10;
+        }
+        
+        function showUploadForm() {
+            document.getElementById('uploadForm').classList.remove('hidden');
+        }
+        
+        function hideUploadForm() {
+            document.getElementById('uploadForm').classList.add('hidden');
+        }
 
-    // Load songs on page load
-    fetchSongs();
-  </script>
+        async function upload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return alert('Choose a file');
+
+            const metadata = {
+                filename: file.name,
+                title: document.getElementById('title').value || file.name.split('.')[0],
+                artist: document.getElementById('artist').value || 'Unknown Artist',
+                album: document.getElementById('album').value || 'Unknown Album',
+                genre: document.getElementById('genre').value || 'Unknown Genre',
+                durationSeconds: parseInt(document.getElementById('duration').value) || 180,
+                releaseDate: document.getElementById('releaseDate').value || '2025-01-01'
+            };
+
+            try {
+                const res = await fetch('http://localhost:8080/v1/music/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(metadata)
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Failed to get upload URL');
+
+                const uploadRes = await fetch(data.uploadUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: { 'Content-Type': file.type }
+                });
+
+                if (!uploadRes.ok) throw new Error('Upload failed');
+
+                alert('Upload successful!');
+                hideUploadForm();
+                if (typeof fetchSongs === 'function') fetchSongs();
+            } catch (err) {
+                console.error('Upload error:', err);
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function fetchSongs() {
+            const container = document.getElementById('popular-songs');
+            container.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const res = await fetch('http://localhost:8080/v1/music/search');
+                const data = await res.json();
+                
+                if (!data.songs || !data.songs.length) {
+                    container.innerHTML = '<p>No songs found.</p>';
+                    songsList = [];
+                    return;
+                }
+
+                songsList = data.songs; // store for random playback
+
+                container.innerHTML = data.songs.map(song => `
+                    <div class="song-card">
+                        <img src="${song.coverUrl || '/images/music.png'}" alt="Cover">
+                        <div class="title">${song.title}</div>
+                        <div class="artist">${song.artist}</div>
+                        <audio controls src="${song.fileUrl}" style="width: 100%; margin-top: 8px;"></audio>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Fetch songs failed:', err);
+                container.innerHTML = '<p>Failed to load songs.</p>';
+                songsList = [];
+            }
+        }
+
+        function openModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+// Random song playback when "Listen Now" is clicked
+        function playRandomSong() {
+            if (!songsList.length) {
+                alert('No songs available yet.');
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * songsList.length);
+            const randomSong = songsList[randomIndex];
+            setCurrentSong(randomSong);
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchSongs();
+            const listenBtn = document.getElementById('listenNowBtn');
+            if (listenBtn) listenBtn.addEventListener('click', playRandomSong);
+        });
+
+
+        async function saveMetadata() {
+        const title = document.getElementById('metaTitle').value || 'Untitled';
+        const artist = document.getElementById('metaArtist').value || 'Unknown Artist';
+        const album = document.getElementById('metaAlbum').value || 'Unknown Album';
+        const genre = document.getElementById('metaGenre').value || 'Unknown Genre';
+        const duration = parseInt(document.getElementById('metaDuration').value) || 180;
+        const releaseDate = document.getElementById('metaDate').value || '2025-01-01';
+        const fileInput = document.getElementById('metaFile');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert('Please select a file.');
+            return;
+        }
+
+        const metadata = {
+            title: title,
+            artist: artist,
+            album: album,
+            genre: genre,
+            duration_seconds: duration,
+            release_date: releaseDate,
+            filename: file.name
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/v1/music/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(metadata)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to get upload URL');
+            }
+
+            const uploadResponse = await fetch(data.uploadUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': file.type
+                },
+                body: file
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('File upload failed');
+            }
+
+            alert('Song uploaded successfully!');
+            closeModal();
+            fetchSongs();
+        } catch (error) {
+            console.error('Error during metadata save/upload:', error);
+            alert('Error: ' + error.message);
+        }
+    }
+    </script>
 </body>
 </html>

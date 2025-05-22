@@ -2,14 +2,11 @@ package frontend
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Temutjin2k/Tyndau/auth_service/internal/adapter/grpc/server/frontend/dto"
 	"github.com/Temutjin2k/Tyndau/auth_service/internal/model"
 	authpb "github.com/Temutjin2k/TyndauProto/gen/go/auth"
 	"github.com/rs/zerolog"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type AuthServer struct {
@@ -26,10 +23,6 @@ func NewAuthServer(uc AuthUseCase, log *zerolog.Logger) *AuthServer {
 }
 
 func (h *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {
-	h.log.Info().
-		Str("email", req.GetEmail()).
-		Msg("Register called")
-
 	user := dto.FromRegisterRequest(req)
 
 	newUser, err := h.uc.Register(ctx, user)
@@ -38,20 +31,12 @@ func (h *AuthServer) Register(ctx context.Context, req *authpb.RegisterRequest) 
 		return nil, err
 	}
 
-	h.log.Info().
-		Int64("user_id", newUser.ID).
-		Msg("Register succeeded")
-
 	return &authpb.RegisterResponse{
 		UserId: newUser.ID,
 	}, nil
 }
 
 func (h *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*authpb.LoginResponse, error) {
-	h.log.Info().
-		Str("email", req.GetEmail()).
-		Msg("Login called")
-
 	user := model.User{
 		Email:    req.GetEmail(),
 		Password: req.GetPassword(),
@@ -66,45 +51,17 @@ func (h *AuthServer) Login(ctx context.Context, req *authpb.LoginRequest) (*auth
 		return nil, err
 	}
 
-	h.log.Info().
-		Str("email", user.Email).
-		Msg("Login succeeded")
-
 	return &authpb.LoginResponse{
 		Token: token.Token,
 	}, nil
 }
 
-func (h *AuthServer) IsAdmin(ctx context.Context, req *authpb.IsAdminRequest) (*authpb.IsAdminResponse, error) {
-	userID := req.GetUserId()
-	h.log.Info().
-		Int64("user_id", userID).
-		Msg("IsAdmin called")
-
-	isAdmin := h.uc.IsAdmin(ctx, userID)
-
-	h.log.Info().
-		Int64("user_id", userID).
-		Bool("is_admin", isAdmin).
-		Msg("IsAdmin result")
-
-	return &authpb.IsAdminResponse{
-		IsAdmin: isAdmin,
-	}, nil
-}
-
-func (h *AuthServer) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
-	h.log.Info().
-		Str("token", fmt.Sprintf("%.10s...", req.GetToken())). // log only part of token
-		Msg("Logout called")
-
-	err := h.uc.Logout(ctx, req.GetToken())
+func (h *AuthServer) ValidateToken(ctx context.Context, req *authpb.ValidateTokenRequest) (*authpb.ValidateTokenResponce, error) {
+	ok, err := h.uc.ValidateToken(ctx, req.GetToken())
 	if err != nil {
-		h.log.Error().Err(err).Msg("Logout failed")
-		return nil, status.Errorf(codes.Internal, "logout failed: %v", err)
+		return nil, err
 	}
-
-	h.log.Info().Msg("Logout succeeded")
-
-	return &authpb.LogoutResponse{Success: true}, nil
+	return &authpb.ValidateTokenResponce{
+		Succeess: ok,
+	}, nil
 }

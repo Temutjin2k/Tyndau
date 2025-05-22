@@ -6,6 +6,7 @@ import (
 
 	"github.com/Temutjin2k/Tyndau/music-service/internal/model"
 	musicpb "github.com/Temutjin2k/TyndauProto/gen/go/music"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // Convert UploadSongRequest to model.Song
@@ -48,4 +49,62 @@ func SongSearchFromRequest(req *musicpb.SearchSongsRequest) model.ListRequest {
 		Limit:  req.Limit,
 		Offset: req.Offset,
 	}
+}
+
+// SongFromUpdateRequest converts protobuf UpdateSongRequest to domain SongUpdate model
+func SongFromUpdateRequest(req *musicpb.UpdateSongRequest) model.SongUpdate {
+	update := model.SongUpdate{
+		ID: req.GetId(),
+	}
+
+	// For strings, we consider empty string as "not set"
+	if req.GetTitle() != "" {
+		update.Title = stringPtr(req.GetTitle())
+	}
+	if req.GetArtist() != "" {
+		update.Artist = stringPtr(req.GetArtist())
+	}
+	if req.GetAlbum() != "" {
+		update.Album = stringPtr(req.GetAlbum())
+	}
+	if req.GetGenre() != "" {
+		update.Genre = stringPtr(req.GetGenre())
+	}
+	if req.GetReleaseDate() != "" {
+		update.ReleaseDate = stringPtr(req.GetReleaseDate())
+	}
+
+	// For numbers, we need to decide how to handle zero values
+	// Option 1: Consider 0 as valid value (remove this check)
+	// Option 2: Consider 0 as "not set" (keep this check)
+	if req.GetDurationSeconds() != 0 {
+		duration := req.GetDurationSeconds()
+		update.DurationSeconds = &duration
+	}
+
+	return update
+}
+
+// Helper function to get string pointer
+func stringPtr(s string) *string {
+	if s == "" { // Adjust this logic if empty string is valid
+		return nil
+	}
+	return &s
+}
+
+// Helper function to convert string wrappers
+func stringWrapper(value *wrapperspb.StringValue) *string {
+	if value == nil {
+		return nil
+	}
+	return &value.Value
+}
+
+// Helper function to convert int32 wrappers
+func int32Wrapper(value *wrapperspb.Int32Value) *int32 {
+	if value == nil {
+		return nil
+	}
+	return &value.Value
 }

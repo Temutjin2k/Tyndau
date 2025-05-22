@@ -17,6 +17,7 @@ type SongRepository interface {
 	Create(ctx context.Context, req *model.Song) (*model.Song, error)
 	Get(ctx context.Context, id int64) (*model.Song, error)
 	List(ctx context.Context, req model.ListRequest) ([]model.Song, error)
+	Update(ctx context.Context, in *model.Song) error
 	Delete(ctx context.Context, id int64) error
 }
 

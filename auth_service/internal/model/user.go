@@ -7,5 +7,7 @@ type (
 		Email      string
 		AvatarLink string
 		Password   string
+
+		Version int32
 	}
 )

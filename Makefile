@@ -14,3 +14,12 @@ initClean:
 	mkdir -p $(DIR)/internal/usecase
 	mkdir -p $(DIR)/migrations
 	mkdir -p $(DIR)/pkg
+
+
+run-local:
+	cd api-gateway/ && go run ./cmd/gateway & \
+	cd ../notification-service && go run ./cmd/notification & \
+	cd ../user_service && go run ./cmd/user & \
+	cd ../music-service && go run ./cmd/music & \
+	cd ../auth_service && go run ./cmd/auth & \
+	wait

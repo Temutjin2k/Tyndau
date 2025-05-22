@@ -13,6 +13,7 @@ type (
 		Server             Server
 		GRPCServices       GRPCServices
 		NatsProducerConfig nats.ProducerConfig
+		JWT                JWT
 
 		Version string `env:"VERSION"`
 	}
@@ -35,6 +36,10 @@ type (
 
 	UserGRPCService struct {
 		Addr string `env:"USER_GRPC_ADDR,notEmpty"`
+	}
+
+	JWT struct {
+		Secret string `env:"JWT_SECRET,notEmpty"`
 	}
 )
 

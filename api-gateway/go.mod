@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	github.com/Temutjin2k/TyndauProto v0.0.10
+	github.com/Temutjin2k/TyndauProto v0.1.1
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250519155744-55703ea1f237 // indirect
