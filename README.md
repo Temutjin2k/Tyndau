@@ -27,20 +27,10 @@ All services are containerized using Docker and orchestrated via Docker Compose.
 | Frontend      | HTML, basic CSS                             |
 | Automation    | Makefile for builds and service management  |
 
-## Project Structure
+## Project Architecture
 
-```bash
-Tyndau/
-├── api-gateway/
-├── auth_service/
-├── user_service/
-├── music-service/
-├── notification-service/
-├── frontend/
-├── proto/               
-├── docker-compose.yml
-└── Makefile
-```
+<img width="1461" height="1133" alt="image" src="https://github.com/user-attachments/assets/b9013734-a3d9-4424-b3b4-b80e15aa4e31" />
+
 
 ## Getting Started
 
@@ -64,6 +54,6 @@ This will build and start all microservices and the frontend.
 ### Proto Contracts
 https://github.com/Temutjin2k/TyndauProto
 
-### Students (SE-2308 group)
+### Authors (Student of Astana IT University, group: SE-2308)
 Merey Ibraim, Temutjin Koszhanov, Beibars Yergali
 
