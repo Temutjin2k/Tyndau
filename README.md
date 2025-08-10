@@ -29,7 +29,7 @@ All services are containerized using Docker and orchestrated via Docker Compose.
 
 ## Project Architecture
 
-<img width="1461" height="1133" alt="image" src="https://github.com/user-attachments/assets/b9013734-a3d9-4424-b3b4-b80e15aa4e31" />
+<img width="1302" height="1079" alt="image" src="https://github.com/user-attachments/assets/da92b698-7e8f-4f78-a8b8-4d0c26569804" />
 
 
 ## Getting Started
